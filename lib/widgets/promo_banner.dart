@@ -65,7 +65,7 @@ class PromoBanner extends StatelessWidget {
                   children: [
                     Text(
                       content.title,
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.nunito(
                         fontSize: titleSize,
                         height: 1.05,
                         fontWeight: FontWeight.w700,
@@ -77,7 +77,7 @@ class PromoBanner extends StatelessWidget {
                     const SizedBox(height: 7),
                     Text(
                       content.subtitle,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.nunito(
                         fontSize: subtitleSize,
                         height: 1.25,
                         fontWeight: FontWeight.w500,
@@ -98,7 +98,7 @@ class PromoBanner extends StatelessWidget {
                       ),
                       child: Text(
                         content.ctaLabel,
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.nunito(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: content.ctaTextColor,

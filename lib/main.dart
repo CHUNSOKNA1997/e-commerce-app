@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
           primary: AppColors.primary,
         ),
         useMaterial3: true,
-        textTheme: GoogleFonts.interTextTheme(),
+        textTheme: GoogleFonts.nunitoTextTheme(),
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,

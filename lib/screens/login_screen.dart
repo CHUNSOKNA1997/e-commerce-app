@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 Text(
                   'Welcome Back',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.nunito(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 Text(
                   'Log in to continue shopping',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.nunito(
                     fontSize: 16,
                     color: AppColors.textSecondary,
                   ),
@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    labelStyle: GoogleFonts.inter(color: AppColors.textSecondary),
+                    labelStyle: GoogleFonts.nunito(color: AppColors.textSecondary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: AppColors.greyLight),
@@ -142,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    labelStyle: GoogleFonts.inter(color: AppColors.textSecondary),
+                    labelStyle: GoogleFonts.nunito(color: AppColors.textSecondary),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,

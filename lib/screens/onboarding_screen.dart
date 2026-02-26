@@ -16,6 +16,18 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
+  static const int _totalPages = 2;
+
+  void _handleContinueTap() {
+    final currentPage = (_pageController.page ?? 0).round();
+    if (currentPage < _totalPages - 1) {
+      _pageController.animateToPage(
+        currentPage + 1,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOut,
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -27,31 +39,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                children: [_buildSplashPage(), _buildWelcomePage()],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SmoothPageIndicator(
-                controller: _pageController,
-                count: 2,
-                effect: const WormEffect(
-                  dotColor: Color(0xFFE0E0E0),
-                  activeDotColor: AppColors.primary,
-                  dotHeight: 8,
-                  dotWidth: 8,
-                  spacing: 8,
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _handleContinueTap,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  children: [_buildSplashPage(), _buildWelcomePage()],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SmoothPageIndicator(
+                  controller: _pageController,
+                  count: _totalPages,
+                  effect: const WormEffect(
+                    dotColor: Color(0xFFE0E0E0),
+                    activeDotColor: AppColors.primary,
+                    dotHeight: 8,
+                    dotWidth: 8,
+                    spacing: 8,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -64,7 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         children: [
           Text(
             'PhsarRohas',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.nunito(
               fontSize: 48,
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
@@ -73,7 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 16),
           Text(
             'Your Fashion Destination',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.nunito(
               fontSize: 16,
               color: AppColors.textSecondary,
             ),
@@ -99,7 +115,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Main Heading
           RichText(
             text: TextSpan(
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.nunito(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
@@ -121,7 +137,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Description
           Text(
             'Browse styles shaped around your comfort, and personality, and discover clothing that feels right today and every day.',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.nunito(
               fontSize: 14,
               color: AppColors.textSecondary,
               height: 1.5,
@@ -149,7 +165,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             children: [
               Text(
                 'Already have an account  ',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.nunito(
                   fontSize: 14,
                   color: AppColors.textSecondary,
                 ),

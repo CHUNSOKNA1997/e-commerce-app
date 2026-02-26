@@ -59,7 +59,7 @@ class ProductCard extends StatelessWidget {
             // Product Name
             Text(
               product.name,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.nunito(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
                 color: Colors.black87,
@@ -71,7 +71,7 @@ class ProductCard extends StatelessWidget {
             // Product Category
             Text(
               product.category,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.nunito(
                 color: Colors.grey.shade500,
                 fontSize: 12,
               ),

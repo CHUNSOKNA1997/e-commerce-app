@@ -41,7 +41,7 @@ class CategoryChip extends StatelessWidget {
             ],
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.nunito(
                 color: isSelected ? Colors.white : Colors.grey.shade800,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 fontSize: 14,

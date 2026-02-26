@@ -98,7 +98,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
             Text(
               'Product Details',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.nunito(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -199,7 +199,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             widget.product.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.nunito(
               fontSize: 30,
               height: 1,
               fontWeight: FontWeight.w600,
@@ -213,7 +213,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             children: [
               TextSpan(
                 text: '\$$price',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.nunito(
                   fontSize: 34,
                   height: 1,
                   fontWeight: FontWeight.w700,
@@ -222,7 +222,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
               TextSpan(
                 text: '.00',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.nunito(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textSecondary,
@@ -242,7 +242,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         const SizedBox(width: 5),
         Text(
           widget.product.category,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.nunito(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -251,14 +251,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         const SizedBox(width: 12),
         Text(
           '|',
-          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFCACACA)),
+          style: GoogleFonts.nunito(fontSize: 13, color: const Color(0xFFCACACA)),
         ),
         const SizedBox(width: 12),
         const Icon(Icons.star, size: 14, color: Color(0xFFFFB228)),
         const SizedBox(width: 4),
         Text(
           widget.product.rating.toStringAsFixed(1),
-          style: GoogleFonts.inter(
+          style: GoogleFonts.nunito(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,
@@ -274,7 +274,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       children: [
         Text(
           'Details',
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.nunito(
             fontSize: 21,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -286,7 +286,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             children: [
               TextSpan(
                 text: _shortDescription(widget.product.description),
-                style: GoogleFonts.inter(
+                style: GoogleFonts.nunito(
                   fontSize: 13,
                   height: 1.55,
                   color: AppColors.textSecondary,
@@ -294,7 +294,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
               TextSpan(
                 text: ' Read more...',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.nunito(
                   fontSize: 13,
                   height: 1.55,
                   color: AppColors.primary,
@@ -314,7 +314,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       children: [
         Text(
           'Product Size',
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.nunito(
             fontSize: 21,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -339,7 +339,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
                 child: Text(
                   _sizes[index],
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.nunito(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: selected ? Colors.white : const Color(0xFF9B9B9B),
@@ -399,7 +399,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
                 child: Text(
                   'Buy Now',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.nunito(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,

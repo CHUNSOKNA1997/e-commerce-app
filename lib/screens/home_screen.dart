@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   'Hello Mike',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.nunito(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -111,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Text(
                   'Welcome back',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.nunito(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                   ),
@@ -157,8 +157,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTagline() {
     return RichText(
       text: TextSpan(
-        style: GoogleFonts.outfit(
-          fontSize: 24,
+        style: GoogleFonts.nunito(
+          fontSize: 22,
           fontWeight: FontWeight.w500,
           color: AppColors.textPrimary,
           height: 1.2,
@@ -198,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: 'Search for clothes...',
-                      hintStyle: GoogleFonts.inter(
+                      hintStyle: GoogleFonts.nunito(
                         color: Colors.grey.shade500,
                         fontSize: 14,
                       ),
@@ -272,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               'Categories',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.nunito(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -282,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {},
               child: Text(
                 'See all',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.nunito(
                   fontSize: 14,
                   color: Colors.grey.shade500,
                   decoration: TextDecoration.underline,
@@ -324,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               'Recommended for you',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.nunito(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -334,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {},
               child: Text(
                 'See all',
-                style: GoogleFonts.inter(
+                style: GoogleFonts.nunito(
                   fontSize: 14,
                   color: Colors.grey.shade500,
                   decoration: TextDecoration.underline,
