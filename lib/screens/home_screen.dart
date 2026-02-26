@@ -17,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final PageController _promoController = PageController(
-    viewportFraction: 0.85,
+    viewportFraction: 0.9,
   );
   int _selectedCategoryIndex = 0;
 
@@ -229,34 +229,38 @@ class _HomeScreenState extends State<HomeScreen> {
       'assets/images/promo-banner-2.jpg',
     ];
 
-    return Column(
-      children: [
-        SizedBox(
-          height: 160,
-          child: PageView.builder(
+    return Padding(
+      padding: const EdgeInsets.only(left: 24),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 160,
+            child: PageView.builder(
+              controller: _promoController,
+              padEnds: false,
+              itemCount: banners.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: PromoBanner(imagePath: banners[index]),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          SmoothPageIndicator(
             controller: _promoController,
-            itemCount: banners.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: PromoBanner(imagePath: banners[index]),
-              );
-            },
+            count: banners.length,
+            effect: ExpandingDotsEffect(
+              activeDotColor: AppColors.primary,
+              dotColor: Colors.grey.shade300,
+              dotHeight: 6,
+              dotWidth: 6,
+              spacing: 4,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        SmoothPageIndicator(
-          controller: _promoController,
-          count: banners.length,
-          effect: ExpandingDotsEffect(
-            activeDotColor: AppColors.primary,
-            dotColor: Colors.grey.shade300,
-            dotHeight: 6,
-            dotWidth: 6,
-            spacing: 4,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

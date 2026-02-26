@@ -35,154 +35,149 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // ── App bar ──────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(Icons.chevron_left, size: 24),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'Product Details',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 40), // balance the back button
-                ],
-              ),
-            ),
-
-            // ── Scrollable content ───────────────────────────────
+            _buildTopBar(),
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildImageCard(),
-                      const SizedBox(height: 20),
-                      _buildTitleRow(),
+                      _buildHeroImage(),
+                      const SizedBox(height: 18),
+                      _buildTitlePriceRow(),
                       const SizedBox(height: 8),
-                      _buildBrandRating(),
+                      _buildMetaRow(),
+                      const SizedBox(height: 18),
+                      _buildDetailsSection(),
                       const SizedBox(height: 20),
-                      _buildDetails(),
-                      const SizedBox(height: 20),
-                      _buildSizeSelector(),
-                      const SizedBox(height: 24),
+                      _buildSizeSection(),
                     ],
                   ),
                 ),
               ),
             ),
-
-            _buildBottomBar(),
+            _buildBottomBar(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImageCard() {
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+      child: SizedBox(
+        height: 42,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFEDEDED)),
+                  ),
+                  child: const Icon(
+                    Icons.chevron_left,
+                    size: 22,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              'Product Details',
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroImage() {
     return Container(
-      height: 300,
+      height: 320,
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFFECECEC),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // Image carousel
           PageView.builder(
             controller: _imageController,
             itemCount: 3,
-            onPageChanged: (i) => setState(() => _currentImagePage = i),
+            onPageChanged: (index) => setState(() => _currentImagePage = index),
             itemBuilder: (context, index) {
               return Image.asset(
                 widget.product.imagePath,
                 fit: BoxFit.cover,
                 width: double.infinity,
-                errorBuilder: (context, error, _) => Container(
-                  color: Colors.grey.shade200,
-                  child: const Icon(Icons.image, size: 80, color: Colors.grey),
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: const Color(0xFFECECEC),
+                  child: const Center(
+                    child: Icon(
+                      Icons.image_outlined,
+                      size: 70,
+                      color: AppColors.grey,
+                    ),
+                  ),
                 ),
               );
             },
           ),
-
-          // Favourite button
           Positioned(
             top: 12,
             right: 12,
             child: GestureDetector(
               onTap: () => setState(() => _isFavorite = !_isFavorite),
               child: Container(
-                width: 36,
-                height: 36,
+                width: 34,
+                height: 34,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.88),
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 6,
-                    ),
-                  ],
                 ),
                 child: Icon(
                   _isFavorite ? Icons.favorite : Icons.favorite_border,
                   size: 18,
-                  color: AppColors.primary,
+                  color: _isFavorite ? const Color(0xFFFF6B6B) : AppColors.grey,
                 ),
               ),
             ),
           ),
-
-          // Page indicator
           Positioned(
-            bottom: 12,
             left: 0,
             right: 0,
+            bottom: 12,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(3, (index) {
-                final isActive = index == _currentImagePage;
+                final active = index == _currentImagePage;
                 return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: isActive ? 20 : 6,
-                  height: 6,
+                  duration: const Duration(milliseconds: 180),
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  height: 5,
+                  width: active ? 16 : 5,
                   decoration: BoxDecoration(
-                    color: isActive ? AppColors.primary : Colors.grey.shade400,
-                    borderRadius: BorderRadius.circular(3),
+                    color: active ? AppColors.primary : Colors.white,
+                    borderRadius: BorderRadius.circular(99),
                   ),
                 );
               }),
@@ -193,29 +188,34 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _buildTitleRow() {
+  Widget _buildTitlePriceRow() {
+    final price = _formatPrice(widget.product.price);
+
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
           child: Text(
             widget.product.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.outfit(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
+              fontSize: 30,
+              height: 1,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         RichText(
           text: TextSpan(
             children: [
               TextSpan(
-                text: '\$${widget.product.price.toStringAsFixed(0)}',
+                text: '\$$price',
                 style: GoogleFonts.outfit(
-                  fontSize: 22,
+                  fontSize: 34,
+                  height: 1,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
                 ),
@@ -223,7 +223,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               TextSpan(
                 text: '.00',
                 style: GoogleFonts.outfit(
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textSecondary,
                 ),
@@ -235,105 +235,114 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _buildBrandRating() {
+  Widget _buildMetaRow() {
     return Row(
       children: [
-        const Icon(Icons.storefront, size: 14, color: AppColors.textSecondary),
-        const SizedBox(width: 4),
+        const Icon(Icons.shopping_bag, size: 14, color: AppColors.textPrimary),
+        const SizedBox(width: 5),
         Text(
           widget.product.category,
-          style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
         ),
         const SizedBox(width: 12),
-        Container(width: 1, height: 12, color: Colors.grey.shade300),
+        Text(
+          '|',
+          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFCACACA)),
+        ),
         const SizedBox(width: 12),
-        const Icon(Icons.star, size: 14, color: Color(0xFFFFC107)),
+        const Icon(Icons.star, size: 14, color: Color(0xFFFFB228)),
         const SizedBox(width: 4),
         Text(
-          widget.product.rating.toString(),
-          style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+          widget.product.rating.toStringAsFixed(1),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildDetails() {
+  Widget _buildDetailsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Details',
           style: GoogleFonts.outfit(
-            fontSize: 16,
+            fontSize: 21,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          widget.product.description,
-          maxLines: 4,
-          overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-            height: 1.6,
-          ),
-        ),
-        const SizedBox(height: 4),
-        GestureDetector(
-          onTap: () {},
-          child: Text(
-            'Read more...',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.primary,
-              fontWeight: FontWeight.w500,
-            ),
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: _shortDescription(widget.product.description),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  height: 1.55,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              TextSpan(
+                text: ' Read more...',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  height: 1.55,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSizeSelector() {
+  Widget _buildSizeSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Product Size',
           style: GoogleFonts.outfit(
-            fontSize: 16,
+            fontSize: 21,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: List.generate(_sizes.length, (index) {
-            final isSelected = _selectedSizeIndex == index;
+            final selected = _selectedSizeIndex == index;
             return GestureDetector(
               onTap: () => setState(() => _selectedSizeIndex = index),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                margin: const EdgeInsets.only(right: 10),
-                width: 52,
-                height: 52,
+                duration: const Duration(milliseconds: 180),
+                alignment: Alignment.center,
+                width: index == 3 ? 52 : 40,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.white,
+                  color: selected ? AppColors.primary : const Color(0xFFF5F5F5),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : Colors.grey.shade300,
-                  ),
                 ),
-                child: Center(
-                  child: Text(
-                    _sizes[index],
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : AppColors.textPrimary,
-                    ),
+                child: Text(
+                  _sizes[index],
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: selected ? Colors.white : const Color(0xFF9B9B9B),
                   ),
                 ),
               ),
@@ -344,32 +353,38 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget _buildBottomBar(BuildContext context) {
+    final safeBottom = MediaQuery.of(context).padding.bottom;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: EdgeInsets.fromLTRB(24, 12, 24, safeBottom + 12),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+            blurRadius: 18,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
             ),
-            child: const Icon(Icons.shopping_cart_outlined, color: AppColors.primary),
+            child: const Icon(
+              Icons.shopping_bag_outlined,
+              size: 20,
+              color: AppColors.primary,
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: SizedBox(
               height: 52,
@@ -377,15 +392,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(26),
+                    borderRadius: BorderRadius.circular(28),
                   ),
                 ),
                 child: Text(
                   'Buy Now',
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -394,5 +412,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
     );
   }
-}
 
+  static String _formatPrice(double price) {
+    final whole = price.toStringAsFixed(0);
+    return whole.replaceAllMapped(
+      RegExp(r'\B(?=(\d{3})+(?!\d))'),
+      (match) => ',',
+    );
+  }
+
+  static String _shortDescription(String value) {
+    const maxChars = 210;
+    final text = value.trim();
+    if (text.length <= maxChars) {
+      return text;
+    }
+    return '${text.substring(0, maxChars).trimRight()}...';
+  }
+}
