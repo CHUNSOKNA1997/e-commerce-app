@@ -6,6 +6,8 @@ import '../models/product.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/product_card.dart';
 import '../widgets/promo_banner.dart';
+import 'cart_screen.dart';
+import 'profile_screen.dart';
 import 'product_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -81,74 +83,99 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            // Profile Picture Placeholder
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.grey.shade300,
-                image: const DecorationImage(
-                  // We'll use a placeholder network image for the profile
-                  image: NetworkImage('https://i.pravatar.cc/150?img=11'),
-                  fit: BoxFit.cover,
-                ),
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ProfileScreen(initialNavIndex: 3),
               ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hello Mike',
-                  style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  'Welcome back',
-                  style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        // Notification Bell
-        Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.notifications_none,
-                color: AppColors.textPrimary,
-                size: 24,
-              ),
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 8,
-                height: 8,
+            );
+          },
+          child: Row(
+            children: [
+              // Profile Picture Placeholder
+              Container(
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.red,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5),
+                  color: Colors.grey.shade300,
+                  image: const DecorationImage(
+                    // We'll use a placeholder network image for the profile
+                    image: NetworkImage('https://i.pravatar.cc/150?img=11'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hello Mike',
+                    style: GoogleFonts.nunito(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Welcome back',
+                    style: GoogleFonts.nunito(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CartScreen()),
+            );
+          },
+          child: Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.shopping_cart_outlined,
+                  color: AppColors.textPrimary,
+                  size: 24,
+                ),
+              ),
+              Positioned(
+                right: 5,
+                top: 5,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '4',
+                      style: GoogleFonts.nunito(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -179,47 +206,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchBar() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(26),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.search, color: Colors.grey.shade500),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Search for clothes...',
-                      hintStyle: GoogleFonts.nunito(
-                        color: Colors.grey.shade500,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 52,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search, color: Colors.grey.shade500),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Search for clothes...',
+                hintStyle: GoogleFonts.nunito(
+                  color: Colors.grey.shade500,
+                  fontSize: 14,
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Container(
-          width: 52,
-          height: 52,
-          decoration: const BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.tune, color: Colors.white),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -382,12 +393,22 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: BottomNavigationBar(
         elevation: 0,
+        currentIndex: 0,
         backgroundColor: Colors.white,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: Colors.grey.shade400,
         showSelectedLabels: false,
         showUnselectedLabels: false,
         type: BottomNavigationBarType.fixed,
+        onTap: (index) {
+          if (index == 3) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ProfileScreen(initialNavIndex: index),
+              ),
+            );
+          }
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
           BottomNavigationBarItem(
@@ -397,10 +418,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite_border),
             label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            label: 'Settings',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
