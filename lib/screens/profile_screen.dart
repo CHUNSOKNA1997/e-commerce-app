@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
 import '../constants/colors.dart';
+import '../models/auth_user.dart';
+import '../models/profile_dashboard.dart';
+import '../state/auth_state.dart';
+import '../state/profile_state.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final int initialNavIndex;
@@ -31,6 +38,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _selectedNavIndex = widget.initialNavIndex;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.read<AuthState>().isAuthenticated) {
+        context.read<ProfileState>().loadDashboard();
+      }
+    });
   }
 
   void _onBottomNavTap(int index) {
@@ -43,6 +56,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthState>();
+    final profileState = context.watch<ProfileState>();
+    final dashboard = profileState.dashboard;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
       body: SafeArea(
@@ -56,15 +73,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     _buildTopBar(),
                     const SizedBox(height: 14),
-                    _buildProfileCard(),
+                    _buildProfileCard(dashboard?.user),
                     const SizedBox(height: 16),
-                    _buildQuickStats(),
+                    _buildQuickStats(dashboard),
                     const SizedBox(height: 20),
                     _buildSectionTitle('Account'),
                     const SizedBox(height: 8),
                     _buildMenuCard(_accountItems),
                     const SizedBox(height: 16),
-                    _buildLogoutButton(),
+                    if (profileState.errorMessage != null) ...[
+                      _buildErrorMessage(profileState.errorMessage!),
+                      const SizedBox(height: 16),
+                    ],
+                    _buildLogoutButton(authState),
                   ],
                 ),
               ),
@@ -106,7 +127,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileCard() {
+  Widget _buildProfileCard(AuthUser? user) {
+    final fullName = user?.fullName.trim().isNotEmpty == true
+        ? user!.fullName.trim()
+        : 'Customer';
+    final email = user?.email ?? 'No email available';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -138,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Michael Eddie',
+                  fullName,
                   style: GoogleFonts.nunito(
                     fontSize: 21,
                     fontWeight: FontWeight.w800,
@@ -147,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'michael.eddie@gmail.com',
+                  email,
                   style: GoogleFonts.nunito(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
@@ -156,7 +182,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(999),
@@ -178,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildQuickStats() {
+  Widget _buildQuickStats(ProfileDashboard? dashboard) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
@@ -187,12 +216,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         border: Border.all(color: const Color(0xFFEFEFEF)),
       ),
       child: Row(
-        children: const [
-          _StatItem(label: 'Orders', value: '26'),
-          _StatDivider(),
-          _StatItem(label: 'Wishlist', value: '14'),
-          _StatDivider(),
-          _StatItem(label: 'Reviews', value: '9'),
+        children: [
+          _StatItem(
+            label: 'Orders',
+            value: dashboard?.orderCount.toString() ?? '0',
+          ),
+          const _StatDivider(),
+          _StatItem(
+            label: 'Wishlist',
+            value: dashboard?.wishlistCount.toString() ?? '0',
+          ),
+          const _StatDivider(),
+          _StatItem(
+            label: 'Cart',
+            value: dashboard?.cartCount.toString() ?? '0',
+          ),
         ],
       ),
     );
@@ -280,11 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               if (!isLast)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Colors.grey.shade100,
-                ),
+                Divider(height: 1, thickness: 1, color: Colors.grey.shade100),
             ],
           );
         }),
@@ -292,19 +326,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildLogoutButton() {
+  Widget _buildErrorMessage(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        message,
+        style: GoogleFonts.nunito(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: Colors.red.shade700,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton(AuthState authState) {
     return SizedBox(
       width: double.infinity,
       height: 50,
       child: OutlinedButton.icon(
-        onPressed: () {},
+        onPressed: () {
+          authState.logout();
+          context.read<ProfileState>().clear();
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
+        },
         icon: const Icon(Icons.logout, size: 18),
         label: Text(
           'Sign Out',
-          style: GoogleFonts.nunito(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w700),
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: const Color(0xFFD96B6B),
@@ -414,10 +471,6 @@ class _StatDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 36,
-      color: const Color(0xFFEDEDED),
-    );
+    return Container(width: 1, height: 36, color: const Color(0xFFEDEDED));
   }
 }

@@ -18,6 +18,19 @@ class Product {
     this.rating = 0.0,
     this.isFavorite = false,
   });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String,
+      price: (json['price'] as num).toDouble(),
+      category: json['category'] as String,
+      imagePath: json['imagePath'] as String,
+      rating: ((json['rating'] as num?) ?? 0).toDouble(),
+      isFavorite: json['isFavorite'] as bool? ?? false,
+    );
+  }
 }
 
 // Dummy data for the UI

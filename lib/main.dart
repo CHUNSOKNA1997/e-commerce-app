@@ -1,35 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
 import 'constants/colors.dart';
 import 'screens/onboarding_screen.dart';
+import 'services/account_service.dart';
+import 'services/api_client.dart';
+import 'services/auth_service.dart';
+import 'services/catalog_service.dart';
+import 'state/auth_state.dart';
+import 'state/catalog_state.dart';
+import 'state/profile_state.dart';
 
 void main() {
-  runApp(const MyApp());
+  final apiClient = ApiClient();
+
+  runApp(MyApp(apiClient: apiClient));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ApiClient apiClient;
+
+  const MyApp({super.key, required this.apiClient});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PhsarRohas',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          primary: AppColors.primary,
+    return MultiProvider(
+      providers: [
+        Provider<ApiClient>.value(value: apiClient),
+        Provider<AccountService>(create: (_) => AccountService(apiClient)),
+        Provider<AuthService>(create: (_) => AuthService(apiClient)),
+        Provider<CatalogService>(create: (_) => CatalogService(apiClient)),
+        ChangeNotifierProvider<AuthState>(
+          create: (context) => AuthState(context.read<AuthService>()),
         ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.nunitoTextTheme(),
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: IconThemeData(color: AppColors.textPrimary),
+        ChangeNotifierProvider<CatalogState>(
+          create: (context) => CatalogState(context.read<CatalogService>()),
         ),
+        ChangeNotifierProvider<ProfileState>(
+          create: (context) => ProfileState(context.read<AccountService>()),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'PhsarRohas',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppColors.primary,
+            primary: AppColors.primary,
+          ),
+          useMaterial3: true,
+          textTheme: GoogleFonts.nunitoTextTheme(),
+          scaffoldBackgroundColor: Colors.white,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            iconTheme: IconThemeData(color: AppColors.textPrimary),
+          ),
+        ),
+        home: const OnboardingScreen(),
       ),
-      home: const OnboardingScreen(),
     );
   }
 }
