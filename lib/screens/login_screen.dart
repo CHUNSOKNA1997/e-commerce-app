@@ -20,6 +20,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
 
+  bool get _isFormFilled =>
+      _emailController.text.trim().isNotEmpty &&
+      _passwordController.text.isNotEmpty;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -141,6 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
+      onChanged: (_) => setState(() {}),
       style: GoogleFonts.nunito(
         fontSize: 15,
         fontWeight: FontWeight.w700,
@@ -167,6 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextFormField(
       controller: _passwordController,
       obscureText: _obscurePassword,
+      onChanged: (_) => setState(() {}),
       style: GoogleFonts.nunito(
         fontSize: 15,
         fontWeight: FontWeight.w700,
@@ -238,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _login,
+        onPressed: _isLoading || !_isFormFilled ? null : _login,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.55),

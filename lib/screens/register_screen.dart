@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
+import '../services/auth_service.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,6 +22,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isSubmitting = false;
+
+  bool get _isFormFilled =>
+      _firstNameController.text.trim().isNotEmpty &&
+      _lastNameController.text.trim().isNotEmpty &&
+      _emailController.text.trim().isNotEmpty &&
+      _passwordController.text.isNotEmpty &&
+      _confirmPasswordController.text.isNotEmpty;
 
   @override
   void dispose() {
@@ -28,6 +39,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      await context.read<AuthService>().register(
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        confirmPassword: _confirmPasswordController.text,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration successful. Please log in.')),
+      );
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override
@@ -111,6 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildFirstNameField() {
     return TextFormField(
       controller: _firstNameController,
+      onChanged: (_) => setState(() {}),
       style: _fieldTextStyle(),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
@@ -128,6 +178,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildLastNameField() {
     return TextFormField(
       controller: _lastNameController,
+      onChanged: (_) => setState(() {}),
       style: _fieldTextStyle(),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
@@ -146,6 +197,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
+      onChanged: (_) => setState(() {}),
       style: _fieldTextStyle(),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
@@ -168,6 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return TextFormField(
       controller: _passwordController,
       obscureText: _obscurePassword,
+      onChanged: (_) => setState(() {}),
       style: _fieldTextStyle(),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -198,6 +251,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: _obscureConfirmPassword,
+      onChanged: (_) => setState(() {}),
       style: _fieldTextStyle(),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -275,24 +329,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: () {
-          _formKey.currentState!.validate();
-        },
+        onPressed: !_isFormFilled || _isSubmitting
+            ? null
+            : _register,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
+          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.55),
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(28),
           ),
         ),
-        child: Text(
-          'Register',
-          style: GoogleFonts.nunito(
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
+        child: _isSubmitting
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Text(
+                'Register',
+                style: GoogleFonts.nunito(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
       ),
     );
   }

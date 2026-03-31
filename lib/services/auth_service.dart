@@ -43,6 +43,25 @@ class AuthService {
     );
   }
 
+  Future<void> register({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    await _apiClient.postJson(
+      '/auth/register',
+      body: {
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'password': password,
+        'confirmPassword': confirmPassword,
+      },
+    );
+  }
+
   Future<AuthUser> getCurrentUser() async {
     final response = await _apiClient.getJson('/auth/me', authenticated: true);
 
