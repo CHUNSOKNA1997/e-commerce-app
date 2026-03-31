@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'constants/colors.dart';
+import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/account_service.dart';
 import 'services/api_client.dart';
@@ -58,8 +59,50 @@ class MyApp extends StatelessWidget {
             iconTheme: IconThemeData(color: AppColors.textPrimary),
           ),
         ),
-        home: const OnboardingScreen(),
+        home: const AppBootstrap(),
       ),
+    );
+  }
+}
+
+class AppBootstrap extends StatefulWidget {
+  const AppBootstrap({super.key});
+
+  @override
+  State<AppBootstrap> createState() => _AppBootstrapState();
+}
+
+class _AppBootstrapState extends State<AppBootstrap> {
+  late final Future<void> _restoreFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreFuture = context.read<AuthState>().restoreSession();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _restoreFuture,
+      builder: (context, snapshot) {
+        final authState = context.watch<AuthState>();
+
+        if (snapshot.connectionState != ConnectionState.done ||
+            authState.isRestoring) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          );
+        }
+
+        if (authState.isAuthenticated) {
+          return const HomeScreen();
+        }
+
+        return const OnboardingScreen();
+      },
     );
   }
 }

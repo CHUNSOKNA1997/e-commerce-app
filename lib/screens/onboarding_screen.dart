@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+
 import '../constants/colors.dart';
-import 'home_screen.dart';
 import 'login_screen.dart';
+import 'register_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -27,18 +28,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  void _openHome() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-      (route) => false,
-    );
-  }
-
   void _openLogin() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  void _openRegister() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RegisterScreen()),
     );
   }
 
@@ -70,19 +70,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const Spacer(),
-                    if (_currentPage == 0)
-                      TextButton(
-                        onPressed: _goToNextPage,
-                        child: Text(
-                          'Skip',
-                          style: GoogleFonts.nunito(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -319,7 +306,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: _openHome,
+              onPressed: _openLogin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -329,7 +316,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
               child: Text(
-                'Get Started',
+                'Login',
                 style: GoogleFonts.nunito(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
@@ -343,22 +330,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Already have an account?',
+                  'Already have an account ?',
                   style: GoogleFonts.nunito(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 1),
                 TextButton(
-                  onPressed: _openLogin,
+                  onPressed: _openRegister,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   child: Text(
-                    'Log In',
+                    'Register',
                     style: GoogleFonts.nunito(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: AppColors.primary,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),

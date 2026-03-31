@@ -1,60 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
-import '../state/auth_state.dart';
-import 'home_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      await context.read<AuthState>().login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-
-      if (!mounted) return;
-
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-        (route) => false,
-      );
-    } catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
   }
 
   @override
@@ -63,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
           child: Form(
             key: _formKey,
             child: Column(
@@ -72,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildTopBar(),
                 const SizedBox(height: 26),
                 Text(
-                  'Welcome Back',
+                  'Create Account',
                   style: GoogleFonts.nunito(
                     fontSize: 34,
                     fontWeight: FontWeight.w800,
@@ -81,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Log in to continue shopping your favorite styles.',
+                  'Enter your details to register a new account.',
                   style: GoogleFonts.nunito(
                     fontSize: 14,
                     height: 1.55,
@@ -89,9 +62,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 26),
-                _buildFormCard(),
+                _buildFirstNameField(),
+                const SizedBox(height: 14),
+                _buildLastNameField(),
+                const SizedBox(height: 14),
+                _buildEmailField(),
+                const SizedBox(height: 14),
+                _buildPasswordField(),
+                const SizedBox(height: 14),
+                _buildConfirmPasswordField(),
                 const SizedBox(height: 26),
-                _buildLoginButton(),
+                _buildRegisterButton(),
               ],
             ),
           ),
@@ -127,13 +108,37 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildFormCard() {
-    return Column(
-      children: [
-        _buildEmailField(),
-        const SizedBox(height: 14),
-        _buildPasswordField(),
-      ],
+  Widget _buildFirstNameField() {
+    return TextFormField(
+      controller: _firstNameController,
+      style: _fieldTextStyle(),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Please enter your first name';
+        }
+        return null;
+      },
+      decoration: _inputDecoration(
+        hint: 'First Name',
+        prefix: Icons.person_outline,
+      ),
+    );
+  }
+
+  Widget _buildLastNameField() {
+    return TextFormField(
+      controller: _lastNameController,
+      style: _fieldTextStyle(),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Please enter your last name';
+        }
+        return null;
+      },
+      decoration: _inputDecoration(
+        hint: 'Last Name',
+        prefix: Icons.badge_outlined,
+      ),
     );
   }
 
@@ -141,11 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextFormField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
-      style: GoogleFonts.nunito(
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-      ),
+      style: _fieldTextStyle(),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
           return 'Please enter your email';
@@ -157,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return null;
       },
       decoration: _inputDecoration(
-        hint: 'Email Address',
+        hint: 'Email',
         prefix: Icons.email_outlined,
       ),
     );
@@ -167,11 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextFormField(
       controller: _passwordController,
       obscureText: _obscurePassword,
-      style: GoogleFonts.nunito(
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-      ),
+      style: _fieldTextStyle(),
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Please enter your password';
@@ -194,6 +191,46 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildConfirmPasswordField() {
+    return TextFormField(
+      controller: _confirmPasswordController,
+      obscureText: _obscureConfirmPassword,
+      style: _fieldTextStyle(),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please confirm your password';
+        }
+        if (value != _passwordController.text) {
+          return 'Passwords do not match';
+        }
+        return null;
+      },
+      decoration: _inputDecoration(
+        hint: 'Confirm Password',
+        prefix: Icons.lock_outline,
+        suffix: IconButton(
+          onPressed: () => setState(
+            () => _obscureConfirmPassword = !_obscureConfirmPassword,
+          ),
+          icon: Icon(
+            _obscureConfirmPassword
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  TextStyle _fieldTextStyle() {
+    return GoogleFonts.nunito(
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      color: AppColors.textPrimary,
     );
   }
 
@@ -233,37 +270,29 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildLoginButton() {
+  Widget _buildRegisterButton() {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _login,
+        onPressed: () {
+          _formKey.currentState!.validate();
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.55),
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(28),
           ),
         ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.3,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Text(
-                'Log In',
-                style: GoogleFonts.nunito(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+        child: Text(
+          'Register',
+          style: GoogleFonts.nunito(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ),
     );
   }

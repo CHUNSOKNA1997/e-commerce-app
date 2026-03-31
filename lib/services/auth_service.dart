@@ -18,6 +18,10 @@ class AuthService {
 
   AuthService(this._apiClient);
 
+  void setAccessToken(String? accessToken) {
+    _apiClient.setAccessToken(accessToken);
+  }
+
   Future<LoginResult> login({
     required String email,
     required String password,
@@ -43,5 +47,23 @@ class AuthService {
     final response = await _apiClient.getJson('/auth/me', authenticated: true);
 
     return AuthUser.fromJson(response['user'] as Map<String, dynamic>);
+  }
+
+  Future<LoginResult> refreshSession({required String refreshToken}) async {
+    final response = await _apiClient.postJson(
+      '/auth/refresh',
+      body: {'refreshToken': refreshToken},
+    );
+
+    final user = AuthUser.fromJson(response['user'] as Map<String, dynamic>);
+    final accessToken = response['accessToken'] as String;
+    final nextRefreshToken = response['refreshToken'] as String;
+    _apiClient.setAccessToken(accessToken);
+
+    return LoginResult(
+      user: user,
+      accessToken: accessToken,
+      refreshToken: nextRefreshToken,
+    );
   }
 }
