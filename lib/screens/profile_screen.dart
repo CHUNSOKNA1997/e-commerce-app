@@ -98,32 +98,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildTopBar() {
-    return Row(
-      children: [
-        Text(
-          'Profile',
-          style: GoogleFonts.nunito(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const Spacer(),
-        InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(999),
-          child: Ink(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFFE8E8E8)),
-            ),
-            child: const Icon(Icons.settings_outlined, size: 20),
-          ),
-        ),
-      ],
+    return Text(
+      'Profile',
+      style: GoogleFonts.nunito(
+        fontSize: 24,
+        fontWeight: FontWeight.w800,
+        color: AppColors.textPrimary,
+      ),
     );
   }
 
@@ -148,26 +129,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Row(
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 72,
+            height: 72,
+            padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2.5),
+              color: Colors.white,
             ),
-            clipBehavior: Clip.antiAlias,
-            child: avatarUrl == null
-                ? const Icon(Icons.person, color: Colors.white, size: 32)
-                : Image.network(
-                    avatarUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 32,
-                      );
-                    },
-                  ),
+            child: ClipOval(
+              child: DecoratedBox(
+                decoration: const BoxDecoration(color: Color(0xFFFF8B45)),
+                child: avatarUrl == null
+                    ? const Icon(Icons.person, color: Colors.white, size: 34)
+                    : Image.network(
+                        avatarUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 34,
+                          );
+                        },
+                      ),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -189,25 +175,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                     color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    'Edit Profile',
-                    style: GoogleFonts.nunito(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                    ),
                   ),
                 ),
               ],
