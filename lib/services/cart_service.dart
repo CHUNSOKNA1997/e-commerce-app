@@ -10,4 +10,20 @@ class CartService {
     final response = await _apiClient.getJson('/cart', authenticated: true);
     return Cart.fromJson(response['cart'] as Map<String, dynamic>);
   }
+
+  Future<Cart> addItem({
+    required String productId,
+    required int quantity,
+  }) async {
+    final response = await _apiClient.postJson(
+      '/cart/items',
+      authenticated: true,
+      body: {
+        'productId': productId,
+        'quantity': quantity,
+      },
+    );
+
+    return Cart.fromJson(response['cart'] as Map<String, dynamic>);
+  }
 }

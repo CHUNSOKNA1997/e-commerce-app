@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
 import '../models/product.dart';
+import '../services/catalog_service.dart';
+import '../state/cart_state.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/product_image.dart';
 
@@ -17,22 +20,43 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final PageController _imageController = PageController();
+  late Product _product;
   int _currentImagePage = 0;
-  int _selectedSizeIndex = 0;
+  int _quantity = 1;
   bool _isFavorite = false;
-
-  final List<String> _sizes = ['M', 'X', 'L', 'XXL'];
+  bool _isLoading = true;
+  bool _isAddingToCart = false;
 
   @override
   void initState() {
     super.initState();
+    _product = widget.product;
     _isFavorite = widget.product.isFavorite;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadProduct());
   }
 
   @override
   void dispose() {
     _imageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadProduct() async {
+    try {
+      final product = await context.read<CatalogService>().getProductById(
+        widget.product.id,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _product = product;
+        _isFavorite = product.isFavorite;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -57,8 +81,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       _buildMetaRow(),
                       const SizedBox(height: 18),
                       _buildDetailsSection(),
-                      const SizedBox(height: 20),
-                      _buildSizeSection(),
                     ],
                   ),
                 ),
@@ -114,6 +136,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildHeroImage() {
+    final imagePaths = _product.galleryImagePaths;
+
     return Container(
       height: 320,
       decoration: BoxDecoration(
@@ -125,11 +149,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         children: [
           PageView.builder(
             controller: _imageController,
-            itemCount: 3,
+            itemCount: imagePaths.length,
             onPageChanged: (index) => setState(() => _currentImagePage = index),
             itemBuilder: (context, index) {
               return ProductImage(
-                product: widget.product,
+                product: _product,
+                imagePathOverride: imagePaths[index],
                 fit: BoxFit.cover,
                 fallback: Container(
                   color: const Color(0xFFECECEC),
@@ -164,41 +189,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 12,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(3, (index) {
-                final active = index == _currentImagePage;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  height: 5,
-                  width: active ? 16 : 5,
-                  decoration: BoxDecoration(
-                    color: active ? AppColors.primary : Colors.white,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                );
-              }),
+          if (imagePaths.length > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 12,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(imagePaths.length, (index) {
+                  final active = index == _currentImagePage;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    height: 5,
+                    width: active ? 16 : 5,
+                    decoration: BoxDecoration(
+                      color: active ? AppColors.primary : Colors.white,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  );
+                }),
+              ),
             ),
-          ),
+          if (_isLoading)
+            const Positioned.fill(
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            ),
         ],
       ),
     );
   }
 
   Widget _buildTitlePriceRow() {
-    final price = formatRiel(widget.product.price);
+    final price = formatRiel(_product.price);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
           child: Text(
-            widget.product.name,
+            _product.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.nunito(
@@ -231,7 +263,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         const Icon(Icons.shopping_bag, size: 14, color: AppColors.textPrimary),
         const SizedBox(width: 5),
         Text(
-          widget.product.category,
+          _product.category,
           style: GoogleFonts.nunito(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -247,7 +279,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         const Icon(Icons.star, size: 14, color: Color(0xFFFFB228)),
         const SizedBox(width: 4),
         Text(
-          widget.product.rating.toStringAsFixed(1),
+          _product.rating.toStringAsFixed(1),
           style: GoogleFonts.nunito(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -271,73 +303,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: _shortDescription(widget.product.description),
-                style: GoogleFonts.nunito(
-                  fontSize: 13,
-                  height: 1.55,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              TextSpan(
-                text: ' Read more...',
-                style: GoogleFonts.nunito(
-                  fontSize: 13,
-                  height: 1.55,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSizeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
         Text(
-          'Product Size',
+          _product.description.trim(),
           style: GoogleFonts.nunito(
-            fontSize: 21,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            fontSize: 13,
+            height: 1.55,
+            color: AppColors.textSecondary,
           ),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: List.generate(_sizes.length, (index) {
-            final selected = _selectedSizeIndex == index;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedSizeIndex = index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                alignment: Alignment.center,
-                width: index == 3 ? 52 : 40,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.primary : const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _sizes[index],
-                  style: GoogleFonts.nunito(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? Colors.white : const Color(0xFF9B9B9B),
-                  ),
-                ),
-              ),
-            );
-          }),
         ),
       ],
     );
@@ -361,17 +333,40 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+              color: const Color(0xFFF7F7F7),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: const Color(0xFFEAEAEA)),
             ),
-            child: const Icon(
-              Icons.shopping_bag_outlined,
-              size: 20,
-              color: AppColors.primary,
+            child: Row(
+              children: [
+                _buildQuantityButton(
+                  icon: Icons.remove,
+                  onTap: _quantity > 1
+                      ? () => setState(() => _quantity -= 1)
+                      : null,
+                ),
+                SizedBox(
+                  width: 28,
+                  child: Text(
+                    '$_quantity',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.nunito(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                _buildQuantityButton(
+                  icon: Icons.add,
+                  onTap: _quantity < 99
+                      ? () => setState(() => _quantity += 1)
+                      : null,
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 12),
@@ -379,7 +374,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: SizedBox(
               height: 52,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _isAddingToCart ? null : _handleAddToCart,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   elevation: 0,
@@ -387,14 +382,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     borderRadius: BorderRadius.circular(28),
                   ),
                 ),
-                child: Text(
-                  'Buy Now',
-                  style: GoogleFonts.nunito(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
+                child: _isAddingToCart
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        'Add to Cart',
+                        style: GoogleFonts.nunito(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -403,12 +407,62 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  static String _shortDescription(String value) {
-    const maxChars = 210;
-    final text = value.trim();
-    if (text.length <= maxChars) {
-      return text;
+  Widget _buildQuantityButton({
+    required IconData icon,
+    required VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: onTap == null ? const Color(0xFFEFEFEF) : Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          size: 18,
+          color: onTap == null
+              ? const Color(0xFFBDBDBD)
+              : AppColors.textPrimary,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleAddToCart() async {
+    setState(() => _isAddingToCart = true);
+
+    try {
+      await context.read<CartState>().addItem(
+        productId: _product.id,
+        quantity: _quantity,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Added $_quantity item${_quantity > 1 ? 's' : ''} to cart',
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString(),
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isAddingToCart = false);
+      }
     }
-    return '${text.substring(0, maxChars).trimRight()}...';
   }
 }

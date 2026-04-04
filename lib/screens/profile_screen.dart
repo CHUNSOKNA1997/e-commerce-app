@@ -14,23 +14,27 @@ import 'login_screen.dart';
 import 'order_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final int initialNavIndex;
+  final bool showBottomNav;
+  final ValueChanged<int>? onTabSelected;
 
-  const ProfileScreen({super.key, this.initialNavIndex = 3});
+  const ProfileScreen({
+    super.key,
+    this.showBottomNav = true,
+    this.onTabSelected,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late int _selectedNavIndex;
-
   List<_ProfileMenuItem> get _accountItems => [
     _ProfileMenuItem(
       icon: Icons.person_outline,
       title: 'Personal Details',
       subtitle: 'Name, email, phone number',
-      onTap: (_) => _openEditProfile(context.read<ProfileState>().dashboard?.user),
+      onTap: (_) =>
+          _openEditProfile(context.read<ProfileState>().dashboard?.user),
     ),
     const _ProfileMenuItem(
       icon: Icons.history,
@@ -49,8 +53,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedNavIndex = widget.initialNavIndex;
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.read<AuthState>().isAuthenticated) {
         context.read<ProfileState>().loadDashboard();
@@ -59,11 +61,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _onBottomNavTap(int index) {
+    if (widget.onTabSelected != null) {
+      widget.onTabSelected!(index);
+      return;
+    }
     if (index == 0) {
       Navigator.of(context).pop();
       return;
     }
-    setState(() => _selectedNavIndex = index);
   }
 
   Future<void> _openEditProfile(AuthUser? user) async {
@@ -115,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-            _buildBottomNav(),
+            if (widget.showBottomNav) _buildBottomNav(),
           ],
         ),
       ),
@@ -352,14 +357,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildLogoutButton(AuthState authState) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
-      child: OutlinedButton.icon(
+      height: 56,
+      child: ElevatedButton.icon(
         onPressed: () async {
           final profileState = context.read<ProfileState>();
+          final navigator = Navigator.of(context);
+          final shouldLogout = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: Text(
+                  'Sign Out?',
+                  style: GoogleFonts.nunito(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                content: Text(
+                  'Are you sure you want to sign out of your account?',
+                  style: GoogleFonts.nunito(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Sign Out',
+                      style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+
+          if (shouldLogout != true || !context.mounted) {
+            return;
+          }
+
           await authState.logout();
           profileState.clear();
           if (!mounted) return;
-          Navigator.of(context).pushAndRemoveUntil(
+          navigator.pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const LoginScreen()),
             (route) => false,
           );
@@ -367,14 +435,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         icon: const Icon(Icons.logout, size: 18),
         label: Text(
           'Sign Out',
-          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w700),
+          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800),
         ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFD96B6B),
-          side: const BorderSide(color: Color(0xFFF0D3D3)),
-          backgroundColor: Colors.white,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(999),
           ),
         ),
       ),
@@ -395,7 +463,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: BottomNavigationBar(
         elevation: 0,
-        currentIndex: _selectedNavIndex,
+        currentIndex: 2,
         backgroundColor: Colors.white,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: Colors.grey.shade400,
@@ -405,10 +473,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: _onBottomNavTap,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.storefront_outlined),
-            label: 'Shop',
-          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite_border),
             label: 'Favorites',

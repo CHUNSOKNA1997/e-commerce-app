@@ -6,12 +6,14 @@ import '../models/product.dart';
 
 class ProductImage extends StatelessWidget {
   final Product product;
+  final String? imagePathOverride;
   final BoxFit fit;
   final Widget? fallback;
 
   const ProductImage({
     super.key,
     required this.product,
+    this.imagePathOverride,
     this.fit = BoxFit.cover,
     this.fallback,
   });
@@ -28,8 +30,10 @@ class ProductImage extends StatelessWidget {
           ),
         );
 
-    if (product.isSvgImage) {
-      final imageUrl = product.imageUrl;
+    final source = imagePathOverride ?? product.imagePath;
+    final imageUrl = product.resolveImageUrl(source);
+
+    if (product.isSvgSource(source)) {
       if (imageUrl == null) {
         return fallbackWidget;
       }
@@ -41,8 +45,7 @@ class ProductImage extends StatelessWidget {
       );
     }
 
-    final imageUrl = product.imageUrl;
-    if (imageUrl != null && product.imagePath.startsWith('/')) {
+    if (imageUrl != null) {
       return Image.network(
         imageUrl,
         fit: fit,
@@ -51,7 +54,7 @@ class ProductImage extends StatelessWidget {
     }
 
     return Image.asset(
-      product.normalizedImageAssetPath,
+      product.normalizeImageAssetPath(source),
       fit: fit,
       errorBuilder: (context, error, stackTrace) => fallbackWidget,
     );

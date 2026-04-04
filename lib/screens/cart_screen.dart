@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -241,20 +242,36 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildProductThumb(CartItem item) {
+    final imageUrl = item.imageUrl;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Container(
         width: 50,
         height: 50,
         color: const Color(0xFFF1F1F1),
-        child: item.imagePath != null && item.imagePath!.isNotEmpty
-            ? Image.asset(
-                item.imagePath!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.image_outlined, color: AppColors.grey);
-                },
-              )
+        child: imageUrl != null
+            ? item.isSvgImage
+                ? SvgPicture.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    placeholderBuilder: (context) {
+                      return const Icon(
+                        Icons.image_outlined,
+                        color: AppColors.grey,
+                      );
+                    },
+                  )
+                : Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.image_outlined,
+                        color: AppColors.grey,
+                      );
+                    },
+                  )
             : const Icon(
                 Icons.hiking_outlined,
                 color: AppColors.textSecondary,

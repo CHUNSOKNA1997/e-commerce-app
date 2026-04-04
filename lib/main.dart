@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'constants/colors.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_shell.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/account_service.dart';
 import 'services/api_client.dart';
@@ -104,7 +104,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
         }
 
         if (authState.isAuthenticated) {
-          return const HomeScreen();
+          return const MainShell();
         }
 
         return const OnboardingScreen();

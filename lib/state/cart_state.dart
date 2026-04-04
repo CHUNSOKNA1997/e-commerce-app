@@ -38,6 +38,26 @@ class CartState extends ChangeNotifier {
     }
   }
 
+  Future<void> addItem({
+    required String productId,
+    required int quantity,
+  }) async {
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _cart = await _cartService.addItem(
+        productId: productId,
+        quantity: quantity,
+      );
+      notifyListeners();
+    } catch (error) {
+      _errorMessage = error.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   void clear() {
     _isLoading = false;
     _errorMessage = null;

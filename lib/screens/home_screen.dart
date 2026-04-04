@@ -4,18 +4,22 @@ import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../constants/colors.dart';
-import '../models/category.dart';
 import '../state/auth_state.dart';
 import '../state/catalog_state.dart';
-import '../widgets/category_chip.dart';
 import '../widgets/product_card.dart';
 import '../widgets/promo_banner.dart';
 import 'cart_screen.dart';
 import 'product_detail_screen.dart';
-import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final bool showBottomNav;
+  final ValueChanged<int>? onTabSelected;
+
+  const HomeScreen({
+    super.key,
+    this.showBottomNav = true,
+    this.onTabSelected,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -23,7 +27,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final PageController _promoController = PageController(viewportFraction: 0.9);
-  int _selectedCategoryIndex = 0;
 
   @override
   void initState() {
@@ -48,7 +51,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
     final catalogState = context.watch<CatalogState>();
-    final categories = _buildCategoryList(catalogState.categories);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -75,24 +77,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCategories(categories),
-                    const SizedBox(height: 32),
-                    _buildRecommended(catalogState),
-                    const SizedBox(height: 32),
                     _buildProductSection(
                       title: 'Trending Now',
                       products: catalogState.trendingNow,
                       catalogState: catalogState,
                       emptyMessage: 'No trending products right now.',
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                     _buildProductSection(
                       title: 'New Arrivals',
                       products: catalogState.newArrivals,
                       catalogState: catalogState,
                       emptyMessage: 'No new arrivals available yet.',
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                     _buildProductSection(
                       title: 'Popular Near You',
                       products: catalogState.popularNearYou,
@@ -106,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: widget.showBottomNav ? _buildBottomNav() : null,
     );
   }
 
@@ -120,11 +118,9 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         GestureDetector(
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const ProfileScreen(initialNavIndex: 3),
-              ),
-            );
+            if (widget.onTabSelected != null) {
+              widget.onTabSelected!(2);
+            }
           },
           child: Row(
             children: [
@@ -258,71 +254,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategories(List<_CategoryItem> categories) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Categories',
-              style: GoogleFonts.nunito(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            TextButton(
-              onPressed: () {},
-              child: Text(
-                'See all',
-                style: GoogleFonts.nunito(
-                  fontSize: 14,
-                  color: Colors.grey.shade500,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 40,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final category = categories[index];
-
-              return CategoryChip(
-                label: category.label,
-                icon: category.icon,
-                isSelected: _selectedCategoryIndex == index,
-                onTap: () async {
-                  setState(() => _selectedCategoryIndex = index);
-
-                  await context.read<CatalogState>().loadProductsByCategory(
-                    category.apiValue,
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecommended(CatalogState catalogState) {
-    return _buildProductSection(
-      title: 'Recommended for you',
-      products: catalogState.products,
-      catalogState: catalogState,
-      emptyMessage: 'No products available for this category yet.',
-    );
-  }
-
   Widget _buildProductSection({
     required String title,
     required List<dynamic> products,
@@ -333,7 +264,6 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               title,
@@ -343,24 +273,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: AppColors.textPrimary,
               ),
             ),
-            if (catalogState.isLoading)
+            if (catalogState.isLoading) ...[
+              const SizedBox(width: 10),
               const SizedBox(
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              TextButton(
-                onPressed: () {},
-                child: Text(
-                  'See all',
-                  style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
               ),
+            ],
           ],
         ),
         const SizedBox(height: 16),
@@ -400,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         else
           SizedBox(
-            height: 250,
+            height: 215,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: products.length,
@@ -446,20 +366,16 @@ class _HomeScreenState extends State<HomeScreen> {
         showUnselectedLabels: false,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
-          if (index == 3) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => ProfileScreen(initialNavIndex: index),
-              ),
-            );
+          if (widget.onTabSelected != null) {
+            widget.onTabSelected!(index);
+            return;
+          }
+          if (index == 2) {
+            return;
           }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.storefront_outlined),
-            label: 'Shop',
-          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite_border),
             label: 'Favorites',
@@ -472,44 +388,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  List<_CategoryItem> _buildCategoryList(List<Category> categories) {
-    return [
-      const _CategoryItem(label: 'All Items', icon: Icons.shopping_bag),
-      ...categories.map(
-        (category) => _CategoryItem(
-          label: category.name,
-          apiValue: category.name,
-          icon: _iconForCategory(category.name),
-        ),
-      ),
-    ];
-  }
-
-  static IconData _iconForCategory(String value) {
-    final normalized = value.toLowerCase();
-
-    if (normalized.contains('cloth') || normalized.contains('fashion')) {
-      return Icons.checkroom;
-    }
-    if (normalized.contains('shoe')) {
-      return Icons.ice_skating;
-    }
-    if (normalized.contains('watch')) {
-      return Icons.watch;
-    }
-    if (normalized.contains('bag')) {
-      return Icons.shopping_bag;
-    }
-
-    return Icons.category_outlined;
-  }
-}
-
-class _CategoryItem {
-  final String label;
-  final String? apiValue;
-  final IconData icon;
-
-  const _CategoryItem({required this.label, required this.icon, this.apiValue});
 }

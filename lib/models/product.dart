@@ -7,6 +7,7 @@ class Product {
   final double price;
   final String category;
   final String imagePath;
+  final List<String> imagePaths;
   final double rating;
   final bool isFavorite;
   final bool isNewArrival;
@@ -20,6 +21,7 @@ class Product {
     required this.price,
     required this.category,
     required this.imagePath,
+    this.imagePaths = const [],
     this.rating = 0.0,
     this.isFavorite = false,
     this.isNewArrival = false,
@@ -27,8 +29,25 @@ class Product {
     this.isPopularNearYou = false,
   });
 
+  List<String> get galleryImagePaths {
+    final normalized = imagePaths
+        .map((path) => path.trim())
+        .where((path) => path.isNotEmpty)
+        .toList();
+
+    if (normalized.isEmpty && imagePath.trim().isNotEmpty) {
+      normalized.add(imagePath.trim());
+    }
+
+    return normalized;
+  }
+
   String? get imageUrl {
-    final path = imagePath.trim();
+    return resolveImageUrl(imagePath);
+  }
+
+  String? resolveImageUrl(String rawPath) {
+    final path = rawPath.trim();
     if (path.isEmpty) {
       return null;
     }
@@ -42,7 +61,11 @@ class Product {
   }
 
   String get normalizedImageAssetPath {
-    final path = imagePath.trim();
+    return normalizeImageAssetPath(imagePath);
+  }
+
+  String normalizeImageAssetPath(String rawPath) {
+    final path = rawPath.trim();
     if (path.isEmpty) {
       return path;
     }
@@ -51,7 +74,11 @@ class Product {
   }
 
   bool get isSvgImage {
-    final source = imagePath.toLowerCase();
+    return isSvgSource(imagePath);
+  }
+
+  bool isSvgSource(String rawPath) {
+    final source = rawPath.toLowerCase();
     return source.endsWith('.svg');
   }
 
@@ -63,6 +90,9 @@ class Product {
       price: (json['price'] as num).toDouble(),
       category: json['category'] as String,
       imagePath: json['imagePath'] as String,
+      imagePaths: (json['imagePaths'] as List<dynamic>? ?? const [])
+          .map((item) => item as String)
+          .toList(),
       rating: ((json['rating'] as num?) ?? 0).toDouble(),
       isFavorite: json['isFavorite'] as bool? ?? false,
       isNewArrival: json['isNewArrival'] as bool? ?? false,
@@ -82,6 +112,7 @@ final List<Product> dummyProducts = [
     price: 4000.00,
     category: 'Unisex Wear',
     imagePath: 'assets/images/purple_hoodie.png', // Reusing placeholder
+    imagePaths: const ['assets/images/purple_hoodie.png'],
     rating: 4.5,
     isFavorite: false,
   ),
@@ -92,6 +123,7 @@ final List<Product> dummyProducts = [
     price: 5500.00,
     category: 'Female Wear',
     imagePath: 'assets/images/orange_coat.png', // Reusing placeholder
+    imagePaths: const ['assets/images/orange_coat.png'],
     rating: 4.8,
     isFavorite: false,
   ),
