@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
 import '../models/product.dart';
+import '../services/account_service.dart';
 import '../services/catalog_service.dart';
 import '../state/cart_state.dart';
 import '../utils/currency_formatter.dart';
@@ -43,14 +44,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<void> _loadProduct() async {
     try {
-      final product = await context.read<CatalogService>().getProductById(
-        widget.product.id,
-      );
+      final catalogService = context.read<CatalogService>();
+      final accountService = context.read<AccountService>();
+      final product = await catalogService.getProductById(widget.product.id);
+      final wishlistItems = await accountService.getWishlistItems();
+      final wishlistIds = wishlistItems.map((item) => item.productId).toSet();
 
       if (!mounted) return;
       setState(() {
         _product = product;
-        _isFavorite = product.isFavorite;
+        _isFavorite = wishlistIds.contains(product.id);
       });
     } finally {
       if (mounted) {
@@ -173,7 +176,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             top: 12,
             right: 12,
             child: GestureDetector(
-              onTap: () => setState(() => _isFavorite = !_isFavorite),
+              onTap: _toggleFavorite,
               child: Container(
                 width: 34,
                 height: 34,
@@ -463,6 +466,43 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       if (mounted) {
         setState(() => _isAddingToCart = false);
       }
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    final nextValue = !_isFavorite;
+
+    try {
+      if (_isFavorite) {
+        await context.read<AccountService>().removeWishlistItem(
+          productId: _product.id,
+        );
+      } else {
+        await context.read<AccountService>().addWishlistItem(
+          productId: _product.id,
+        );
+      }
+
+      if (!mounted) return;
+      setState(() => _isFavorite = nextValue);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            nextValue ? 'Added to wishlist' : 'Removed from wishlist',
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString(),
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
     }
   }
 }

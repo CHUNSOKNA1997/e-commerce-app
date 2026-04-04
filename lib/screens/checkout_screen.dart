@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,6 +39,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
       final cartState = context.read<CartState>();
       final cartService = context.read<CartService>();
       final order = await cartState.createOrder();
@@ -46,14 +50,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
 
       if (!mounted) return;
-      await showModalBottomSheet<void>(
+      final paymentSucceeded =
+          await showModalBottomSheet<bool>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (_) => _CheckoutWebSheet(checkout: checkout),
-      );
+      ) ??
+          false;
       if (!mounted) return;
-      Navigator.of(context).pop();
+      if (paymentSucceeded) {
+        navigator.pop();
+        navigator.pop();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'Payment completed successfully.',
+              style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+            ),
+          ),
+        );
+      }
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -169,23 +186,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       decoration: BoxDecoration(
-        color: const Color(0xFF262D39),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.primary, width: 1.2),
+        border: Border.all(color: AppColors.primary, width: 1.1),
       ),
       child: Row(
         children: [
           Container(
-            width: 56,
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            width: 62,
+            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFF2D2D),
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFFF12B31),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: SvgPicture.asset('assets/payway/khqr.svg'),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,18 +210,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Text(
                   'ABA KHQR',
                   style: GoogleFonts.nunito(
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   'Scan to pay with any banking app',
                   style: GoogleFonts.nunito(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -329,6 +346,8 @@ class _CheckoutWebSheet extends StatefulWidget {
 
 class _CheckoutWebSheetState extends State<_CheckoutWebSheet> {
   late final WebViewController _controller;
+  Timer? _statusTimer;
+  bool _hasCompleted = false;
   bool _isLoading = true;
 
   @override
@@ -351,6 +370,11 @@ class _CheckoutWebSheetState extends State<_CheckoutWebSheet> {
             }
           },
           onPageFinished: (_) {
+            _hideMerchantLogo();
+            Future<void>.delayed(
+              const Duration(milliseconds: 350),
+              _hideMerchantLogo,
+            );
             if (mounted) {
               setState(() => _isLoading = false);
             }
@@ -358,6 +382,17 @@ class _CheckoutWebSheetState extends State<_CheckoutWebSheet> {
         ),
       )
       ..loadRequest(Uri.parse(checkoutUrl));
+
+    _statusTimer = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) => _checkPaymentStatus(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _statusTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -372,7 +407,7 @@ class _CheckoutWebSheetState extends State<_CheckoutWebSheet> {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Container(
             width: 44,
             height: 5,
@@ -381,39 +416,19 @@ class _CheckoutWebSheetState extends State<_CheckoutWebSheet> {
               borderRadius: BorderRadius.circular(999),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'KHQR Checkout',
-                        style: GoogleFonts.nunito(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        formatCurrency(widget.checkout.amount),
-                        style: GoogleFonts.nunito(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 2, 12, 0),
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 32,
+                  height: 32,
                 ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
+                icon: const Icon(Icons.close),
+              ),
             ),
           ),
           Expanded(
@@ -444,5 +459,77 @@ class _CheckoutWebSheetState extends State<_CheckoutWebSheet> {
         ],
       ),
     );
+  }
+
+  Future<void> _hideMerchantLogo() async {
+    try {
+      await _controller.runJavaScript('''
+        (() => {
+          document.body.style.marginTop = '0';
+          document.body.style.paddingTop = '0';
+
+          const firstBlock = document.body.firstElementChild;
+          if (firstBlock) {
+            firstBlock.style.marginTop = '0';
+            firstBlock.style.paddingTop = '0';
+          }
+
+          const images = Array.from(document.querySelectorAll('img'));
+          if (images.length < 2) return;
+
+          const standalone = images.find((img) => {
+            const rect = img.getBoundingClientRect();
+            return rect.top < window.innerHeight * 0.35 && rect.width < 120 && rect.height < 120;
+          });
+
+          if (!standalone) return;
+
+          const parent = standalone.parentElement;
+          standalone.style.display = 'none';
+          if (parent && parent.children.length === 1) {
+            parent.style.display = 'none';
+          }
+
+          const topCandidates = Array.from(document.querySelectorAll('div, section, header'))
+            .filter((el) => {
+              const rect = el.getBoundingClientRect();
+              return rect.top < window.innerHeight * 0.2 && rect.height > 40 && rect.height < 220;
+            });
+
+          for (const el of topCandidates) {
+            if (el.contains(standalone)) {
+              el.style.display = 'none';
+              break;
+            }
+          }
+        })();
+      ''');
+    } catch (_) {
+      // Ignore webview DOM injection failures and keep the checkout visible.
+    }
+  }
+
+  Future<void> _checkPaymentStatus() async {
+    if (_hasCompleted) {
+      return;
+    }
+
+    try {
+      final payment = await context.read<CartService>().getPaymentStatus(
+        paymentId: widget.checkout.paymentId,
+      );
+
+      if (!mounted || _hasCompleted) {
+        return;
+      }
+
+      if (payment.status.toUpperCase() == 'SUCCESS') {
+        _hasCompleted = true;
+        _statusTimer?.cancel();
+        Navigator.of(context).pop(true);
+      }
+    } catch (_) {
+      // Ignore transient polling failures and continue polling.
+    }
   }
 }

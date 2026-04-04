@@ -79,4 +79,15 @@ class CartService {
 
     return PaymentCheckout.fromJson(response);
   }
+
+  Future<PaymentCheckout> getPaymentStatus({
+    required String paymentId,
+  }) async {
+    final response = await _apiClient.getJson(
+      '/payments/status/$paymentId',
+      authenticated: true,
+    );
+
+    return PaymentCheckout.fromJson(response);
+  }
 }
