@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../constants/colors.dart';
 import '../models/product.dart';
+import '../utils/currency_formatter.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -189,7 +191,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildTitlePriceRow() {
-    final price = _formatPrice(widget.product.price);
+    final price = formatRiel(widget.product.price);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -210,25 +212,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         const SizedBox(width: 12),
         RichText(
           text: TextSpan(
-            children: [
-              TextSpan(
-                text: '\$$price',
-                style: GoogleFonts.nunito(
-                  fontSize: 34,
-                  height: 1,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              TextSpan(
-                text: '.00',
-                style: GoogleFonts.nunito(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+            text: price,
+            style: GoogleFonts.nunito(
+              fontSize: 34,
+              height: 1,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       ],
@@ -410,14 +400,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  static String _formatPrice(double price) {
-    final whole = price.toStringAsFixed(0);
-    return whole.replaceAllMapped(
-      RegExp(r'\B(?=(\d{3})+(?!\d))'),
-      (match) => ',',
     );
   }
 

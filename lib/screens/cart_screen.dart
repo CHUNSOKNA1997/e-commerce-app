@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../constants/colors.dart';
 import '../models/cart.dart';
 import '../state/cart_state.dart';
+import '../utils/currency_formatter.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -359,7 +360,7 @@ class _CartScreenState extends State<CartScreen> {
           child: Text(
             isCartEmpty
                 ? 'Add items to continue'
-                : 'Continue to Pay \$${_formatMoney(total)}',
+                : 'Continue to Pay ${formatRiel(total)}',
             style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -467,39 +468,13 @@ class _CartScreenState extends State<CartScreen> {
     required double decimalSize,
     Color color = AppColors.textPrimary,
   }) {
-    final formatted = _formatMoney(amount);
-    final parts = formatted.split('.');
-    return RichText(
-      text: TextSpan(
-        children: [
-          TextSpan(
-            text: '\$${parts[0]}',
-            style: GoogleFonts.nunito(
-              fontSize: mainSize,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-          TextSpan(
-            text: '.${parts[1]}',
-            style: GoogleFonts.nunito(
-              fontSize: decimalSize,
-              fontWeight: FontWeight.w700,
-              color: color.withValues(alpha: 0.75),
-            ),
-          ),
-        ],
+    return Text(
+      formatRiel(amount),
+      style: GoogleFonts.nunito(
+        fontSize: mainSize,
+        fontWeight: FontWeight.w800,
+        color: color,
       ),
     );
-  }
-
-  String _formatMoney(double value) {
-    final fixed = value.toStringAsFixed(2);
-    final parts = fixed.split('.');
-    final whole = parts[0].replaceAllMapped(
-      RegExp(r'\B(?=(\d{3})+(?!\d))'),
-      (match) => ',',
-    );
-    return '$whole.${parts[1]}';
   }
 }
