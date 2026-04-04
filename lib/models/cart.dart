@@ -31,6 +31,7 @@ class Cart {
 
 class CartItem {
   final String id;
+  final String productId;
   final String name;
   final String category;
   final double price;
@@ -39,6 +40,7 @@ class CartItem {
 
   const CartItem({
     required this.id,
+    required this.productId,
     required this.name,
     required this.category,
     required this.price,
@@ -51,6 +53,8 @@ class CartItem {
 
     return CartItem(
       id: (json['id'] ?? json['productId'] ?? product?['id'] ?? '') as String,
+      productId:
+          (json['productId'] ?? product?['id'] ?? json['id'] ?? '') as String,
       name: (json['name'] ?? product?['name'] ?? 'Unknown item') as String,
       category:
           (json['category'] ?? product?['category'] ?? 'Uncategorized')

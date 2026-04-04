@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +6,7 @@ import '../constants/colors.dart';
 import '../models/cart.dart';
 import '../state/cart_state.dart';
 import '../utils/currency_formatter.dart';
+import 'checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -16,6 +16,8 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  final Set<String> _pendingItemIds = <String>{};
+
   @override
   void initState() {
     super.initState();
@@ -130,6 +132,8 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildCartItemCard(CartItem item) {
+    final isPending = _pendingItemIds.contains(item.id);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
       decoration: BoxDecoration(
@@ -190,7 +194,9 @@ class _CartScreenState extends State<CartScreen> {
                 children: [
                   _qtyTextButton(
                     text: '-',
-                    onTap: () {},
+                    onTap: isPending || item.quantity <= 1
+                        ? null
+                        : () => _changeQuantity(item, item.quantity - 1),
                     textColor: const Color(0xFF6E6E6E),
                   ),
                   const SizedBox(width: 8),
@@ -208,7 +214,9 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () {},
+                    onTap: isPending
+                        ? null
+                        : () => _changeQuantity(item, item.quantity + 1),
                     child: Container(
                       width: 18,
                       height: 18,
@@ -227,7 +235,7 @@ class _CartScreenState extends State<CartScreen> {
               ),
               const SizedBox(height: 8),
               GestureDetector(
-                onTap: () {},
+                onTap: isPending ? null : () => _removeItem(item),
                 child: const Icon(
                   Icons.delete_outline,
                   size: 16,
@@ -243,6 +251,7 @@ class _CartScreenState extends State<CartScreen> {
 
   Widget _buildProductThumb(CartItem item) {
     final imageUrl = item.imageUrl;
+    final fallback = const Icon(Icons.image_outlined, color: AppColors.grey);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
@@ -252,24 +261,12 @@ class _CartScreenState extends State<CartScreen> {
         color: const Color(0xFFF1F1F1),
         child: imageUrl != null
             ? item.isSvgImage
-                ? SvgPicture.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                    placeholderBuilder: (context) {
-                      return const Icon(
-                        Icons.image_outlined,
-                        color: AppColors.grey,
-                      );
-                    },
-                  )
+                ? fallback
                 : Image.network(
                     imageUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
-                      return const Icon(
-                        Icons.image_outlined,
-                        color: AppColors.grey,
-                      );
+                      return fallback;
                     },
                   )
             : const Icon(
@@ -282,7 +279,7 @@ class _CartScreenState extends State<CartScreen> {
 
   Widget _qtyTextButton({
     required String text,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
     required Color textColor,
   }) {
     return GestureDetector(
@@ -296,6 +293,43 @@ class _CartScreenState extends State<CartScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _changeQuantity(CartItem item, int quantity) async {
+    setState(() => _pendingItemIds.add(item.id));
+
+    try {
+      await context.read<CartState>().updateItemQuantity(
+        cartItemId: item.id,
+        quantity: quantity,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _pendingItemIds.remove(item.id));
+      }
+    }
+  }
+
+  Future<void> _removeItem(CartItem item) async {
+    setState(() => _pendingItemIds.add(item.id));
+
+    try {
+      await context.read<CartState>().removeItem(cartItemId: item.id);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _pendingItemIds.remove(item.id));
+      }
+    }
   }
 
   Widget _buildSummaryCard(CartSummary summary) {
@@ -364,7 +398,15 @@ class _CartScreenState extends State<CartScreen> {
         width: double.infinity,
         height: 54,
         child: ElevatedButton(
-          onPressed: isCartEmpty ? null : () {},
+          onPressed: isCartEmpty
+              ? null
+              : () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CheckoutScreen(),
+                    ),
+                  );
+                },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.45),
@@ -377,7 +419,7 @@ class _CartScreenState extends State<CartScreen> {
           child: Text(
             isCartEmpty
                 ? 'Add items to continue'
-                : 'Continue to Pay ${formatRiel(total)}',
+                : 'Continue to Pay ${formatCurrency(total)}',
             style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -486,7 +528,7 @@ class _CartScreenState extends State<CartScreen> {
     Color color = AppColors.textPrimary,
   }) {
     return Text(
-      formatRiel(amount),
+      formatCurrency(amount),
       style: GoogleFonts.nunito(
         fontSize: mainSize,
         fontWeight: FontWeight.w800,

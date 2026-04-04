@@ -50,6 +50,21 @@ class ApiClient {
     return _decodeJson(response);
   }
 
+  Future<Map<String, dynamic>> postEmpty(
+    String path, {
+    bool authenticated = false,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl$path'),
+      headers: _buildHeaders(
+        authenticated: authenticated,
+        includeJsonContentType: false,
+      ),
+    );
+
+    return _decodeJson(response);
+  }
+
   Future<Map<String, dynamic>> patchJson(
     String path, {
     required Map<String, dynamic> body,
@@ -78,6 +93,21 @@ class ApiClient {
     return _decodeJson(response);
   }
 
+  Future<Map<String, dynamic>> deleteJson(
+    String path, {
+    bool authenticated = false,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl$path'),
+      headers: _buildHeaders(
+        authenticated: authenticated,
+        includeJsonContentType: false,
+      ),
+    );
+
+    return _decodeJson(response);
+  }
+
   Future<Map<String, dynamic>> putMultipart(
     String path, {
     required Map<String, String> fields,
@@ -100,11 +130,15 @@ class ApiClient {
     return _decodeJson(response);
   }
 
-  Map<String, String> _buildHeaders({required bool authenticated}) {
-    final headers = <String, String>{
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
+  Map<String, String> _buildHeaders({
+    required bool authenticated,
+    bool includeJsonContentType = true,
+  }) {
+    final headers = <String, String>{'Accept': 'application/json'};
+
+    if (includeJsonContentType) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (authenticated && _accessToken != null && _accessToken!.isNotEmpty) {
       headers['Authorization'] = 'Bearer $_accessToken';

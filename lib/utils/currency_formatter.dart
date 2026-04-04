@@ -1,7 +1,11 @@
-String formatRiel(num value) {
-  final whole = value.round().toString().replaceAllMapped(
+String formatCurrency(num value) {
+  final amount = value.toDouble();
+  final whole = amount.truncate().toString().replaceAllMapped(
     RegExp(r'\B(?=(\d{3})+(?!\d))'),
     (match) => ',',
   );
-  return '៛$whole';
+  final decimals = ((amount - amount.truncate()) * 100).round()
+      .toString()
+      .padLeft(2, '0');
+  return '\$$whole.$decimals';
 }

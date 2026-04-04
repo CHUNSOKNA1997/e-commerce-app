@@ -223,7 +223,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildTitlePriceRow() {
-    final price = formatRiel(_product.price);
+    final price = formatCurrency(_product.price);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/cart.dart';
+import '../models/order.dart';
 import '../services/cart_service.dart';
 
 class CartState extends ChangeNotifier {
@@ -51,6 +52,67 @@ class CartState extends ChangeNotifier {
         quantity: quantity,
       );
       notifyListeners();
+    } catch (error) {
+      _errorMessage = error.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> updateItemQuantity({
+    required String cartItemId,
+    required int quantity,
+  }) async {
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _cart = await _cartService.updateItemQuantity(
+        cartItemId: cartItemId,
+        quantity: quantity,
+      );
+      notifyListeners();
+    } catch (error) {
+      _errorMessage = error.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> removeItem({
+    required String cartItemId,
+  }) async {
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _cart = await _cartService.removeItem(cartItemId: cartItemId);
+      notifyListeners();
+    } catch (error) {
+      _errorMessage = error.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<Order> createOrder() async {
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final order = await _cartService.createOrder();
+      _cart = Cart(
+        id: _cart?.id ?? '',
+        items: const [],
+        summary: const CartSummary(
+          subTotal: 0,
+          vat: 0,
+          deliveryFee: 0,
+          total: 0,
+        ),
+      );
+      notifyListeners();
+      return order;
     } catch (error) {
       _errorMessage = error.toString();
       notifyListeners();

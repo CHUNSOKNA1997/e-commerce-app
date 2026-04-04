@@ -197,7 +197,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            formatRiel(order.total),
+            formatCurrency(order.total),
             style: GoogleFonts.nunito(
               fontSize: 20,
               fontWeight: FontWeight.w800,
