@@ -131,30 +131,3 @@ class Product {
     );
   }
 }
-
-// Dummy data for the UI
-final List<Product> dummyProducts = [
-  Product(
-    id: '1',
-    name: 'Abracadabra Shirt',
-    description:
-        'Crafted with attention to detail and designed for everyday confidence, this shirt blends comfort, style, and versatility. Made from high-quality fabric, it offers a smooth feel on the skin while maintaining a structured.',
-    price: 4000.00,
-    category: 'Unisex Wear',
-    imagePath: 'assets/images/purple_hoodie.png', // Reusing placeholder
-    imagePaths: const ['assets/images/purple_hoodie.png'],
-    rating: 4.5,
-    isFavorite: false,
-  ),
-  Product(
-    id: '2',
-    name: 'Panther Jacket',
-    description: 'A stylish and comfortable jacket perfect for any occasion.',
-    price: 5500.00,
-    category: 'Female Wear',
-    imagePath: 'assets/images/orange_coat.png', // Reusing placeholder
-    imagePaths: const ['assets/images/orange_coat.png'],
-    rating: 4.8,
-    isFavorite: false,
-  ),
-];

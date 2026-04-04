@@ -60,6 +60,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           false;
       if (!mounted) return;
       if (paymentSucceeded) {
+        await cartState.loadCart();
+        if (!mounted) return;
         navigator.pop();
         navigator.pop();
         messenger.showSnackBar(

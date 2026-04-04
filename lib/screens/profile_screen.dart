@@ -9,6 +9,7 @@ import '../constants/colors.dart';
 import '../models/auth_user.dart';
 import '../models/profile_dashboard.dart';
 import '../state/auth_state.dart';
+import '../state/cart_state.dart';
 import '../state/profile_state.dart';
 import 'login_screen.dart';
 import 'order_history_screen.dart';
@@ -16,11 +17,13 @@ import 'order_history_screen.dart';
 class ProfileScreen extends StatefulWidget {
   final bool showBottomNav;
   final ValueChanged<int>? onTabSelected;
+  final bool isActive;
 
   const ProfileScreen({
     super.key,
     this.showBottomNav = true,
     this.onTabSelected,
+    this.isActive = true,
   });
 
   @override
@@ -54,10 +57,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.read<AuthState>().isAuthenticated) {
-        context.read<ProfileState>().loadDashboard();
-      }
+      _refreshDashboard();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant ProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.isActive && widget.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _refreshDashboard();
+        }
+      });
+    }
+  }
+
+  void _refreshDashboard() {
+    if (context.read<AuthState>().isAuthenticated) {
+      context.read<ProfileState>().loadDashboard();
+    }
   }
 
   void _onBottomNavTap(int index) {
@@ -88,6 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
     final profileState = context.watch<ProfileState>();
+    final cartState = context.watch<CartState>();
     final dashboard = profileState.dashboard;
 
     return Scaffold(
@@ -105,7 +125,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 14),
                     _buildProfileCard(dashboard?.user),
                     const SizedBox(height: 16),
-                    _buildQuickStats(dashboard),
+                    _buildQuickStats(
+                      dashboard,
+                      cartCount: cartState.itemCount,
+                    ),
                     const SizedBox(height: 20),
                     _buildSectionTitle('Account'),
                     const SizedBox(height: 8),
@@ -215,7 +238,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildQuickStats(ProfileDashboard? dashboard) {
+  Widget _buildQuickStats(
+    ProfileDashboard? dashboard, {
+    required int cartCount,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
@@ -237,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const _StatDivider(),
           _StatItem(
             label: 'Cart',
-            value: dashboard?.cartCount.toString() ?? '0',
+            value: cartCount.toString(),
           ),
         ],
       ),
@@ -549,6 +575,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
     final navigator = Navigator.of(context);
     final profileState = context.read<ProfileState>();
     final authState = context.read<AuthState>();
+    final previousAvatarUrl = widget.user.avatarUrl;
     setState(() => _isSaving = true);
 
     try {
@@ -559,7 +586,14 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
         avatarPath: _avatarPathController.text.trim(),
         avatarFilePath: _selectedAvatarFilePath,
       );
+      if (previousAvatarUrl != null && previousAvatarUrl.isNotEmpty) {
+        await NetworkImage(previousAvatarUrl).evict();
+      }
+      if (user.avatarUrl != null && user.avatarUrl!.isNotEmpty) {
+        await NetworkImage(user.avatarUrl!).evict();
+      }
       await authState.setCurrentUser(user);
+      await profileState.loadDashboard();
       if (!mounted) return;
       navigator.pop();
       scaffoldMessenger.showSnackBar(

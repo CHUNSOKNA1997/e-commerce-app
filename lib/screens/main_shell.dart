@@ -36,7 +36,11 @@ class _MainShellState extends State<MainShell> {
         children: [
           HomeScreen(showBottomNav: false, onTabSelected: _selectTab),
           WishlistScreen(isActive: _currentIndex == 1),
-          ProfileScreen(showBottomNav: false, onTabSelected: _selectTab),
+          ProfileScreen(
+            showBottomNav: false,
+            onTabSelected: _selectTab,
+            isActive: _currentIndex == 2,
+          ),
         ],
       ),
       bottomNavigationBar: Container(

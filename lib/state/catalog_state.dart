@@ -22,7 +22,7 @@ class CatalogState extends ChangeNotifier {
   List<Product> get newArrivals => _newArrivals;
   List<Product> get popularNearYou => _popularNearYou;
 
-  Future<void> loadInitialData({String? category}) async {
+  Future<void> loadInitialData() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -40,22 +40,6 @@ class CatalogState extends ChangeNotifier {
       _popularNearYou = results[2];
     } catch (error) {
       _errorMessage = error.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> loadProductsByCategory(String? category) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      _products = await _catalogService.getProducts(category: category);
-    } catch (error) {
-      _errorMessage = error.toString();
-      _products = const [];
     } finally {
       _isLoading = false;
       notifyListeners();
