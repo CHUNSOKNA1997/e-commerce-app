@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -619,8 +620,43 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       return;
     }
 
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile.path,
+      compressQuality: 90,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: '',
+          toolbarColor: AppColors.primary,
+          toolbarWidgetColor: Colors.white,
+          activeControlsWidgetColor: AppColors.primary,
+          statusBarLight: false,
+          navBarLight: false,
+          backgroundColor: Colors.black,
+          cropFrameColor: AppColors.primary,
+          cropGridColor: Colors.white24,
+          hideBottomControls: false,
+          lockAspectRatio: true,
+          initAspectRatio: CropAspectRatioPreset.square,
+          cropStyle: CropStyle.circle,
+        ),
+        IOSUiSettings(
+          title: 'Crop Avatar',
+          aspectRatioLockEnabled: true,
+          resetAspectRatioEnabled: false,
+          rotateButtonsHidden: false,
+          rotateClockwiseButtonHidden: false,
+          cropStyle: CropStyle.circle,
+        ),
+      ],
+    );
+
+    if (croppedFile == null || !mounted) {
+      return;
+    }
+
     setState(() {
-      _selectedAvatarFilePath = pickedFile.path;
+      _selectedAvatarFilePath = croppedFile.path;
     });
   }
 
