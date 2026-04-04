@@ -12,4 +12,18 @@ class ProfileDashboard {
     required this.wishlistCount,
     required this.cartCount,
   });
+
+  ProfileDashboard copyWith({
+    AuthUser? user,
+    int? orderCount,
+    int? wishlistCount,
+    int? cartCount,
+  }) {
+    return ProfileDashboard(
+      user: user ?? this.user,
+      orderCount: orderCount ?? this.orderCount,
+      wishlistCount: wishlistCount ?? this.wishlistCount,
+      cartCount: cartCount ?? this.cartCount,
+    );
+  }
 }

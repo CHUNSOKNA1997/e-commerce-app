@@ -7,16 +7,20 @@ class CatalogService {
 
   CatalogService(this._apiClient);
 
-  Future<List<Product>> getProducts({String? category}) async {
-    final query = category == null || category.isEmpty
-        ? ''
-        : '?category=${Uri.encodeQueryComponent(category)}';
-    final response = await _apiClient.getJson('/products$query');
+  Future<List<Product>> _getProductList(String path) async {
+    final response = await _apiClient.getJson(path);
     final items = response['items'] as List<dynamic>? ?? const [];
 
     return items
         .map((item) => Product.fromJson(item as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<Product>> getProducts({String? category}) async {
+    final query = category == null || category.isEmpty
+        ? ''
+        : '?category=${Uri.encodeQueryComponent(category)}';
+    return _getProductList('/products$query');
   }
 
   Future<List<Category>> getCategories() async {
@@ -32,5 +36,17 @@ class CatalogService {
     final response = await _apiClient.getJson('/products/$productId');
 
     return Product.fromJson(response['item'] as Map<String, dynamic>);
+  }
+
+  Future<List<Product>> getTrendingNow() async {
+    return _getProductList('/products/trending-now');
+  }
+
+  Future<List<Product>> getNewArrivals() async {
+    return _getProductList('/products/new-arrivals');
+  }
+
+  Future<List<Product>> getPopularNearYou() async {
+    return _getProductList('/products/popular-near-you');
   }
 }

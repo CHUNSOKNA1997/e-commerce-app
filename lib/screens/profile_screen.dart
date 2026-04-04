@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
@@ -8,6 +11,7 @@ import '../models/profile_dashboard.dart';
 import '../state/auth_state.dart';
 import '../state/profile_state.dart';
 import 'login_screen.dart';
+import 'order_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final int initialNavIndex;
@@ -21,18 +25,26 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late int _selectedNavIndex;
 
-  List<_ProfileMenuItem> get _accountItems => const [
+  List<_ProfileMenuItem> get _accountItems => [
     _ProfileMenuItem(
       icon: Icons.person_outline,
       title: 'Personal Details',
       subtitle: 'Name, email, phone number',
+      onTap: (_) => _openEditProfile(context.read<ProfileState>().dashboard?.user),
     ),
-    _ProfileMenuItem(
+    const _ProfileMenuItem(
       icon: Icons.history,
       title: 'Order History',
       subtitle: 'Past and current orders',
+      onTap: _openOrderHistory,
     ),
   ];
+
+  static void _openOrderHistory(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const OrderHistoryScreen()));
+  }
 
   @override
   void initState() {
@@ -52,6 +64,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     setState(() => _selectedNavIndex = index);
+  }
+
+  Future<void> _openEditProfile(AuthUser? user) async {
+    if (user == null) {
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _EditProfileSheet(user: user),
+    );
   }
 
   @override
@@ -240,7 +265,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return Column(
             children: [
               InkWell(
-                onTap: () {},
+                onTap: item.onTap == null ? null : () => item.onTap!(context),
+                borderRadius: BorderRadius.circular(14),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -401,12 +427,294 @@ class _ProfileMenuItem {
   final IconData icon;
   final String title;
   final String subtitle;
+  final void Function(BuildContext context)? onTap;
 
   const _ProfileMenuItem({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
+}
+
+class _EditProfileSheet extends StatefulWidget {
+  final AuthUser user;
+
+  const _EditProfileSheet({required this.user});
+
+  @override
+  State<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends State<_EditProfileSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _imagePicker = ImagePicker();
+  late final TextEditingController _firstNameController;
+  late final TextEditingController _lastNameController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _avatarPathController;
+  bool _isSaving = false;
+  String? _selectedAvatarFilePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _firstNameController = TextEditingController(text: widget.user.firstName);
+    _lastNameController = TextEditingController(text: widget.user.lastName);
+    _phoneController = TextEditingController(text: widget.user.phone ?? '');
+    _avatarPathController = TextEditingController(
+      text: widget.user.avatarPath ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _phoneController.dispose();
+    _avatarPathController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final profileState = context.read<ProfileState>();
+    final authState = context.read<AuthState>();
+    setState(() => _isSaving = true);
+
+    try {
+      final user = await profileState.updateProfile(
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        avatarPath: _avatarPathController.text.trim(),
+        avatarFilePath: _selectedAvatarFilePath,
+      );
+      await authState.setCurrentUser(user);
+      if (!mounted) return;
+      navigator.pop();
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('Profile updated')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(SnackBar(content: Text(error.toString())));
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  Future<void> _pickAvatar() async {
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _selectedAvatarFilePath = pickedFile.path;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDADADA),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Edit Profile',
+                style: GoogleFonts.nunito(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 88,
+                      height: 88,
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                      child: ClipOval(
+                        child: DecoratedBox(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFF8B45),
+                          ),
+                          child: _selectedAvatarFilePath != null
+                              ? Image.file(
+                                  File(_selectedAvatarFilePath!),
+                                  fit: BoxFit.cover,
+                                )
+                              : widget.user.avatarUrl == null
+                              ? const Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 38,
+                                )
+                              : Image.network(
+                                  widget.user.avatarUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: 38,
+                                    );
+                                  },
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: _isSaving ? null : _pickAvatar,
+                      icon: const Icon(Icons.upload_outlined),
+                      label: const Text('Upload Avatar'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildField(
+                controller: _firstNameController,
+                label: 'First Name',
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Please enter your first name'
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              _buildField(
+                controller: _lastNameController,
+                label: 'Last Name',
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Please enter your last name'
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              _buildField(
+                controller: _phoneController,
+                label: 'Phone',
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    disabledBackgroundColor: AppColors.primary.withValues(
+                      alpha: 0.55,
+                    ),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          'Save Changes',
+                          style: GoogleFonts.nunito(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: GoogleFonts.nunito(
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: GoogleFonts.nunito(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textSecondary,
+        ),
+        filled: true,
+        fillColor: const Color(0xFFF7F7F7),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+        ),
+      ),
+    );
+  }
 }
 
 class _StatItem extends StatelessWidget {

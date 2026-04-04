@@ -78,6 +78,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildCategories(categories),
                     const SizedBox(height: 32),
                     _buildRecommended(catalogState),
+                    const SizedBox(height: 32),
+                    _buildProductSection(
+                      title: 'Trending Now',
+                      products: catalogState.trendingNow,
+                      catalogState: catalogState,
+                      emptyMessage: 'No trending products right now.',
+                    ),
+                    const SizedBox(height: 32),
+                    _buildProductSection(
+                      title: 'New Arrivals',
+                      products: catalogState.newArrivals,
+                      catalogState: catalogState,
+                      emptyMessage: 'No new arrivals available yet.',
+                    ),
+                    const SizedBox(height: 32),
+                    _buildProductSection(
+                      title: 'Popular Near You',
+                      products: catalogState.popularNearYou,
+                      catalogState: catalogState,
+                      emptyMessage: 'No popular products near you yet.',
+                    ),
                   ],
                 ),
               ),
@@ -294,8 +315,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRecommended(CatalogState catalogState) {
-    final products = catalogState.products;
+    return _buildProductSection(
+      title: 'Recommended for you',
+      products: catalogState.products,
+      catalogState: catalogState,
+      emptyMessage: 'No products available for this category yet.',
+    );
+  }
 
+  Widget _buildProductSection({
+    required String title,
+    required List<dynamic> products,
+    required CatalogState catalogState,
+    required String emptyMessage,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -303,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recommended for you',
+              title,
               style: GoogleFonts.nunito(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -357,7 +390,7 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
-              'No products available for this category yet.',
+              emptyMessage,
               style: GoogleFonts.nunito(
                 fontSize: 14,
                 color: AppColors.textSecondary,

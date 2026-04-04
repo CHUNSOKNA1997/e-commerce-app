@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../models/product.dart';
+import 'product_image.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -28,10 +30,9 @@ class ProductCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: Image.asset(
-                    product.imagePath,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
+                  child: ProductImage(
+                    product: product,
+                    fallback: Container(
                       color: Colors.grey.shade100,
                       alignment: Alignment.center,
                       child: Icon(

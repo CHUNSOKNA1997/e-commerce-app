@@ -64,6 +64,42 @@ class ApiClient {
     return _decodeJson(response);
   }
 
+  Future<Map<String, dynamic>> putJson(
+    String path, {
+    required Map<String, dynamic> body,
+    bool authenticated = false,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl$path'),
+      headers: _buildHeaders(authenticated: authenticated),
+      body: jsonEncode(body),
+    );
+
+    return _decodeJson(response);
+  }
+
+  Future<Map<String, dynamic>> putMultipart(
+    String path, {
+    required Map<String, String> fields,
+    String? fileField,
+    String? filePath,
+    bool authenticated = false,
+  }) async {
+    final request = http.MultipartRequest('PUT', Uri.parse('$baseUrl$path'));
+    request.headers.addAll(_buildHeaders(authenticated: authenticated));
+    request.fields.addAll(fields);
+
+    if (fileField != null && filePath != null && filePath.isNotEmpty) {
+      request.files.add(
+        await http.MultipartFile.fromPath(fileField, filePath),
+      );
+    }
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    return _decodeJson(response);
+  }
+
   Map<String, String> _buildHeaders({required bool authenticated}) {
     final headers = <String, String>{
       'Content-Type': 'application/json',

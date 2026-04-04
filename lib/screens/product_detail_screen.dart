@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants/colors.dart';
 import '../models/product.dart';
 import '../utils/currency_formatter.dart';
+import '../widgets/product_image.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -127,11 +128,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             itemCount: 3,
             onPageChanged: (index) => setState(() => _currentImagePage = index),
             itemBuilder: (context, index) {
-              return Image.asset(
-                widget.product.imagePath,
+              return ProductImage(
+                product: widget.product,
                 fit: BoxFit.cover,
-                width: double.infinity,
-                errorBuilder: (context, error, stackTrace) => Container(
+                fallback: Container(
                   color: const Color(0xFFECECEC),
                   child: const Center(
                     child: Icon(

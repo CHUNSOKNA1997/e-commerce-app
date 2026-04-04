@@ -1,4 +1,5 @@
 import '../models/auth_user.dart';
+import '../models/order.dart';
 import '../models/profile_dashboard.dart';
 import 'api_client.dart';
 
@@ -35,5 +36,53 @@ class AccountService {
       wishlistCount: wishlistItems.length,
       cartCount: cartItems.length,
     );
+  }
+
+  Future<AuthUser> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String phone,
+    required String avatarPath,
+    String? avatarFilePath,
+  }) async {
+    if (avatarFilePath != null && avatarFilePath.isNotEmpty) {
+      await _apiClient.putMultipart(
+        '/users/profile',
+        authenticated: true,
+        fields: {
+          'firstName': firstName,
+          'lastName': lastName,
+          if (phone.isNotEmpty) 'phone': phone,
+          if (avatarPath.isNotEmpty) 'avatarPath': avatarPath,
+        },
+        fileField: 'avatar',
+        filePath: avatarFilePath,
+      );
+    } else {
+      await _apiClient.putJson(
+        '/users/profile',
+        authenticated: true,
+        body: {
+          'firstName': firstName,
+          'lastName': lastName,
+          'phone': phone,
+          'avatarPath': avatarPath,
+        },
+      );
+    }
+
+    final response = await _apiClient.getJson(
+      '/users/profile',
+      authenticated: true,
+    );
+    return AuthUser.fromJson(response['user'] as Map<String, dynamic>);
+  }
+
+  Future<List<Order>> getOrders() async {
+    final response = await _apiClient.getJson('/orders', authenticated: true);
+    final items = response['items'] as List<dynamic>? ?? const [];
+    return items
+        .map((item) => Order.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 }

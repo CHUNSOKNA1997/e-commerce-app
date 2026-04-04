@@ -1,3 +1,5 @@
+import '../config/app_config.dart';
+
 class Product {
   final String id;
   final String name;
@@ -7,6 +9,9 @@ class Product {
   final String imagePath;
   final double rating;
   final bool isFavorite;
+  final bool isNewArrival;
+  final bool isTrending;
+  final bool isPopularNearYou;
 
   Product({
     required this.id,
@@ -17,7 +22,38 @@ class Product {
     required this.imagePath,
     this.rating = 0.0,
     this.isFavorite = false,
+    this.isNewArrival = false,
+    this.isTrending = false,
+    this.isPopularNearYou = false,
   });
+
+  String? get imageUrl {
+    final path = imagePath.trim();
+    if (path.isEmpty) {
+      return null;
+    }
+
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+
+    final normalizedPath = path.startsWith('/') ? path : '/$path';
+    return '${AppConfig.apiOrigin}$normalizedPath';
+  }
+
+  String get normalizedImageAssetPath {
+    final path = imagePath.trim();
+    if (path.isEmpty) {
+      return path;
+    }
+
+    return path.startsWith('/') ? path.substring(1) : path;
+  }
+
+  bool get isSvgImage {
+    final source = imagePath.toLowerCase();
+    return source.endsWith('.svg');
+  }
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
@@ -29,6 +65,9 @@ class Product {
       imagePath: json['imagePath'] as String,
       rating: ((json['rating'] as num?) ?? 0).toDouble(),
       isFavorite: json['isFavorite'] as bool? ?? false,
+      isNewArrival: json['isNewArrival'] as bool? ?? false,
+      isTrending: json['isTrending'] as bool? ?? false,
+      isPopularNearYou: json['isPopularNearYou'] as bool? ?? false,
     );
   }
 }

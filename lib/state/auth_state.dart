@@ -96,6 +96,12 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setCurrentUser(AuthUser user) async {
+    _currentUser = user;
+    await _persistSession();
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     await _clearSession();
     _isRestoring = false;
