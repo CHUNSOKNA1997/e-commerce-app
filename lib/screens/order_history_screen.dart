@@ -6,6 +6,7 @@ import '../constants/colors.dart';
 import '../models/order.dart';
 import '../services/account_service.dart';
 import '../utils/currency_formatter.dart';
+import '../widgets/skeleton_box.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -36,8 +37,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 future: _ordersFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState != ConnectionState.done) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      itemCount: 4,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) =>
+                          const _OrderCardSkeleton(),
                     );
                   }
 
@@ -225,6 +231,40 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     final month = value.month.toString().padLeft(2, '0');
     final day = value.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
+  }
+}
+
+class _OrderCardSkeleton extends StatelessWidget {
+  const _OrderCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEFEFEF)),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(child: SkeletonBox(width: double.infinity, height: 14)),
+              SizedBox(width: 12),
+              SkeletonBox(width: 72, height: 24, borderRadius: BorderRadius.all(Radius.circular(99))),
+            ],
+          ),
+          SizedBox(height: 10),
+          SkeletonBox(width: 72, height: 12),
+          SizedBox(height: 8),
+          SkeletonBox(width: 124, height: 22),
+          SizedBox(height: 8),
+          SkeletonBox(width: 112, height: 12),
+        ],
+      ),
+    );
   }
 }
 

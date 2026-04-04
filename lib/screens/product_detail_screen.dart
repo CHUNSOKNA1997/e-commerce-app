@@ -9,6 +9,7 @@ import '../services/catalog_service.dart';
 import '../state/cart_state.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/product_image.dart';
+import '../widgets/skeleton_box.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -74,18 +75,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeroImage(),
-                      const SizedBox(height: 18),
-                      _buildTitlePriceRow(),
-                      const SizedBox(height: 8),
-                      _buildMetaRow(),
-                      const SizedBox(height: 18),
-                      _buildDetailsSection(),
-                    ],
-                  ),
+                  child: _isLoading
+                      ? _buildDetailsSkeleton()
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeroImage(),
+                            const SizedBox(height: 18),
+                            _buildTitlePriceRow(),
+                            const SizedBox(height: 8),
+                            _buildMetaRow(),
+                            const SizedBox(height: 18),
+                            _buildDetailsSection(),
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -214,14 +217,40 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 }),
               ),
             ),
-          if (_isLoading)
-            const Positioned.fill(
-              child: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
-            ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetailsSkeleton() {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SkeletonBox(
+          width: double.infinity,
+          height: 320,
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
+        SizedBox(height: 18),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(child: SkeletonBox(width: double.infinity, height: 32)),
+            SizedBox(width: 12),
+            SkeletonBox(width: 96, height: 34),
+          ],
+        ),
+        SizedBox(height: 12),
+        SkeletonBox(width: 180, height: 14),
+        SizedBox(height: 22),
+        SkeletonBox(width: 72, height: 22),
+        SizedBox(height: 10),
+        SkeletonBox(width: double.infinity, height: 12),
+        SizedBox(height: 8),
+        SkeletonBox(width: double.infinity, height: 12),
+        SizedBox(height: 8),
+        SkeletonBox(width: 220, height: 12),
+      ],
     );
   }
 

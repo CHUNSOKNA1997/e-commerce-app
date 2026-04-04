@@ -8,6 +8,7 @@ import '../models/wishlist_item.dart';
 import '../services/account_service.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/product_image.dart';
+import '../widgets/skeleton_box.dart';
 import 'product_detail_screen.dart';
 
 class WishlistScreen extends StatefulWidget {
@@ -70,10 +71,13 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   future: _wishlistFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.done) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
-                        ),
+                      return ListView.separated(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        itemCount: 4,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 12),
+                        itemBuilder: (context, index) =>
+                            const _WishlistCardSkeleton(),
                       );
                     }
 
@@ -118,6 +122,46 @@ class _WishlistScreenState extends State<WishlistScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WishlistCardSkeleton extends StatelessWidget {
+  const _WishlistCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFEFEFEF)),
+      ),
+      child: const Row(
+        children: [
+          SkeletonBox(
+            width: 86,
+            height: 86,
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(width: 146, height: 18),
+                SizedBox(height: 8),
+                SkeletonBox(width: 90, height: 12),
+                SizedBox(height: 12),
+                SkeletonBox(width: 118, height: 18),
+              ],
+            ),
+          ),
+          SizedBox(width: 8),
+          SkeletonBox(width: 14, height: 18),
+        ],
       ),
     );
   }

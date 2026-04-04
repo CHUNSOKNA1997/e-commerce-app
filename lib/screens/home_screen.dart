@@ -10,6 +10,7 @@ import '../state/cart_state.dart';
 import '../state/catalog_state.dart';
 import '../widgets/product_card.dart';
 import '../widgets/promo_banner.dart';
+import '../widgets/skeleton_box.dart';
 import 'cart_screen.dart';
 import 'product_detail_screen.dart';
 
@@ -325,14 +326,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: AppColors.textPrimary,
               ),
             ),
-            if (catalogState.isLoading) ...[
-              const SizedBox(width: 10),
-              const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ],
           ],
         ),
         const SizedBox(height: 16),
@@ -353,7 +346,17 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           )
-        else if (!catalogState.isLoading && products.isEmpty)
+        else if (catalogState.isLoading)
+          SizedBox(
+            height: 215,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: 3,
+              separatorBuilder: (context, index) => const SizedBox(width: 16),
+              itemBuilder: (context, index) => _buildProductCardSkeleton(),
+            ),
+          )
+        else if (products.isEmpty)
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -394,6 +397,26 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildProductCardSkeleton() {
+    return SizedBox(
+      width: 214,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          SkeletonBox(
+            width: 214,
+            height: 150,
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+          SizedBox(height: 12),
+          SkeletonBox(width: 132, height: 18),
+          SizedBox(height: 8),
+          SkeletonBox(width: 96, height: 12),
+        ],
+      ),
     );
   }
 

@@ -6,6 +6,7 @@ import '../constants/colors.dart';
 import '../models/cart.dart';
 import '../state/cart_state.dart';
 import '../utils/currency_formatter.dart';
+import '../widgets/skeleton_box.dart';
 import 'checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
@@ -13,6 +14,23 @@ class CartScreen extends StatefulWidget {
 
   @override
   State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartSummarySkeletonRow extends StatelessWidget {
+  final bool total;
+
+  const _CartSummarySkeletonRow({this.total = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SkeletonBox(width: total ? 72 : 52, height: total ? 18 : 14),
+        const Spacer(),
+        SkeletonBox(width: total ? 104 : 78, height: total ? 20 : 16),
+      ],
+    );
+  }
 }
 
 class _CartScreenState extends State<CartScreen> {
@@ -42,10 +60,9 @@ class _CartScreenState extends State<CartScreen> {
             _buildTopBar(),
             Expanded(
               child: cartState.isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
+                  ? SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
+                      child: _buildCartSkeleton(),
                     )
                   : cartState.errorMessage != null
                   ? _buildErrorState(cartState)
@@ -74,6 +91,73 @@ class _CartScreenState extends State<CartScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCartSkeleton() {
+    return Column(
+      children: [
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 3,
+          separatorBuilder: (context, index) => const SizedBox(height: 8),
+          itemBuilder: (context, index) => Container(
+            padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFEFEFEF)),
+            ),
+            child: Row(
+              children: const [
+                SkeletonBox(width: 50, height: 50, borderRadius: BorderRadius.all(Radius.circular(8))),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonBox(width: 150, height: 18),
+                      SizedBox(height: 8),
+                      SkeletonBox(width: 90, height: 12),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    SkeletonBox(width: 58, height: 18),
+                    SizedBox(height: 10),
+                    SkeletonBox(width: 16, height: 16),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFEFEFEF)),
+          ),
+          child: const Column(
+            children: [
+              _CartSummarySkeletonRow(),
+              SizedBox(height: 8),
+              _CartSummarySkeletonRow(),
+              SizedBox(height: 8),
+              _CartSummarySkeletonRow(),
+              Divider(height: 18),
+              _CartSummarySkeletonRow(total: true),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
