@@ -61,4 +61,37 @@ class CatalogState extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void setFavorite({
+    required String productId,
+    required bool isFavorite,
+  }) {
+    Product update(Product product) {
+      if (product.id != productId) {
+        return product;
+      }
+
+      return product.copyWith(isFavorite: isFavorite);
+    }
+
+    _products = _products.map(update).toList();
+    _trendingNow = _trendingNow.map(update).toList();
+    _newArrivals = _newArrivals.map(update).toList();
+    _popularNearYou = _popularNearYou.map(update).toList();
+    notifyListeners();
+  }
+
+  void syncWishlist(Set<String> wishlistProductIds) {
+    Product update(Product product) {
+      return product.copyWith(
+        isFavorite: wishlistProductIds.contains(product.id),
+      );
+    }
+
+    _products = _products.map(update).toList();
+    _trendingNow = _trendingNow.map(update).toList();
+    _newArrivals = _newArrivals.map(update).toList();
+    _popularNearYou = _popularNearYou.map(update).toList();
+    notifyListeners();
+  }
 }

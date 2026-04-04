@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../constants/colors.dart';
+import '../services/account_service.dart';
 import '../state/auth_state.dart';
+import '../state/cart_state.dart';
 import '../state/catalog_state.dart';
 import '../widgets/product_card.dart';
 import '../widgets/promo_banner.dart';
@@ -34,10 +36,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final authState = context.read<AuthState>();
+      final cartState = context.read<CartState>();
       final catalogState = context.read<CatalogState>();
 
       await authState.refreshCurrentUser();
+      if (!mounted) return;
+      if (authState.isAuthenticated) {
+        await cartState.loadCart();
+      }
+      if (!mounted) return;
       await catalogState.loadInitialData();
+      if (!mounted) return;
+      if (authState.isAuthenticated) {
+        final wishlistItems = await context.read<AccountService>()
+            .getWishlistItems();
+        if (!mounted) return;
+        context.read<CatalogState>().syncWishlist(
+          wishlistItems.map((item) => item.productId).toSet(),
+        );
+      }
     });
   }
 
@@ -50,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthState>();
+    final cartState = context.watch<CartState>();
     final catalogState = context.watch<CatalogState>();
 
     return Scaffold(
@@ -64,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildAppBar(authState),
+                    _buildAppBar(authState, cartState.itemCount),
                     const SizedBox(height: 24),
                     _buildTagline(),
                     const SizedBox(height: 32),
@@ -108,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAppBar(AuthState authState) {
+  Widget _buildAppBar(AuthState authState, int cartItemCount) {
     final user = authState.currentUser;
     final firstName = user?.firstName ?? 'Shopper';
     final avatarUrl = user?.avatarUrl;
@@ -172,17 +190,51 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
             ).push(MaterialPageRoute(builder: (_) => const CartScreen()));
           },
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.shopping_cart_outlined,
-              color: AppColors.textPrimary,
-              size: 24,
-            ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.shopping_cart_outlined,
+                  color: AppColors.textPrimary,
+                  size: 24,
+                ),
+              ),
+              if (cartItemCount > 0)
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        cartItemCount > 99 ? '99+' : '$cartItemCount',
+                        style: GoogleFonts.nunito(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ],
@@ -336,12 +388,52 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   },
+                  onFavoriteTap: () => _handleFavoriteTap(product),
                 );
               },
             ),
           ),
       ],
     );
+  }
+
+  Future<void> _handleFavoriteTap(dynamic product) async {
+    final isFavorite = product.isFavorite == true;
+
+    try {
+      if (isFavorite) {
+        await context.read<AccountService>().removeWishlistItem(
+          productId: product.id as String,
+        );
+      } else {
+        await context.read<AccountService>().addWishlistItem(
+          productId: product.id as String,
+        );
+      }
+      if (!mounted) return;
+      context.read<CatalogState>().setFavorite(
+        productId: product.id as String,
+        isFavorite: !isFavorite,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isFavorite ? 'Removed from wishlist' : 'Added to wishlist',
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString(),
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildBottomNav() {

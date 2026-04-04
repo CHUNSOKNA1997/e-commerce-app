@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
+import 'wishlist_screen.dart';
 
 class MainShell extends StatefulWidget {
   final int initialIndex;
@@ -34,11 +35,7 @@ class _MainShellState extends State<MainShell> {
         index: _currentIndex,
         children: [
           HomeScreen(showBottomNav: false, onTabSelected: _selectTab),
-          const _PlaceholderTab(
-            title: 'Favorites',
-            subtitle: 'Favorite items will appear here.',
-            icon: Icons.favorite_border,
-          ),
+          WishlistScreen(isActive: _currentIndex == 1),
           ProfileScreen(showBottomNav: false, onTabSelected: _selectTab),
         ],
       ),
@@ -74,56 +71,6 @@ class _MainShellState extends State<MainShell> {
               label: 'Profile',
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PlaceholderTab extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-
-  const _PlaceholderTab({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 42, color: AppColors.primary),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

@@ -77,6 +77,36 @@ class Product {
     return isSvgSource(imagePath);
   }
 
+  Product copyWith({
+    String? id,
+    String? name,
+    String? description,
+    double? price,
+    String? category,
+    String? imagePath,
+    List<String>? imagePaths,
+    double? rating,
+    bool? isFavorite,
+    bool? isNewArrival,
+    bool? isTrending,
+    bool? isPopularNearYou,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      category: category ?? this.category,
+      imagePath: imagePath ?? this.imagePath,
+      imagePaths: imagePaths ?? this.imagePaths,
+      rating: rating ?? this.rating,
+      isFavorite: isFavorite ?? this.isFavorite,
+      isNewArrival: isNewArrival ?? this.isNewArrival,
+      isTrending: isTrending ?? this.isTrending,
+      isPopularNearYou: isPopularNearYou ?? this.isPopularNearYou,
+    );
+  }
+
   bool isSvgSource(String rawPath) {
     final source = rawPath.toLowerCase();
     return source.endsWith('.svg');

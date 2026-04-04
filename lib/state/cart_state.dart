@@ -17,6 +17,7 @@ class CartState extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   Cart? get cart => _cart;
   List<CartItem> get items => _cart?.items ?? const [];
+  int get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
   CartSummary get summary => _cart?.summary ?? const CartSummary(
     subTotal: 0,
     vat: 0,
@@ -100,19 +101,7 @@ class CartState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final order = await _cartService.createOrder();
-      _cart = Cart(
-        id: _cart?.id ?? '',
-        items: const [],
-        summary: const CartSummary(
-          subTotal: 0,
-          vat: 0,
-          deliveryFee: 0,
-          total: 0,
-        ),
-      );
-      notifyListeners();
-      return order;
+      return await _cartService.createOrder();
     } catch (error) {
       _errorMessage = error.toString();
       notifyListeners();

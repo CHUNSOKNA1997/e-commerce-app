@@ -1,6 +1,7 @@
 import '../models/auth_user.dart';
 import '../models/order.dart';
 import '../models/profile_dashboard.dart';
+import '../models/wishlist_item.dart';
 import 'api_client.dart';
 
 class AccountService {
@@ -84,5 +85,35 @@ class AccountService {
     return items
         .map((item) => Order.fromJson(item as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<WishlistItem>> getWishlistItems() async {
+    final response = await _apiClient.getJson('/wishlist', authenticated: true);
+    final wishlist = response['wishlist'] as Map<String, dynamic>? ?? const {};
+    final items = wishlist['items'] as List<dynamic>? ?? const [];
+    return items
+        .map((item) => WishlistItem.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> addWishlistItem({
+    required String productId,
+  }) async {
+    await _apiClient.postJson(
+      '/wishlist/items',
+      authenticated: true,
+      body: {
+        'productId': productId,
+      },
+    );
+  }
+
+  Future<void> removeWishlistItem({
+    required String productId,
+  }) async {
+    await _apiClient.deleteJson(
+      '/wishlist/items/$productId',
+      authenticated: true,
+    );
   }
 }

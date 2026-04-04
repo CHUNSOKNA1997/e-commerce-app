@@ -53,27 +53,22 @@ class _CartScreenState extends State<CartScreen> {
                   ? _buildEmptyState()
                   : SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
-                      child: Column(
-                        children: [
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: cartItems.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                              return _buildCartItemCard(cartItems[index]);
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          _buildSummaryCard(summary),
-                        ],
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: cartItems.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          return _buildCartItemCard(cartItems[index]);
+                        },
                       ),
                     ),
             ),
             _buildCheckoutArea(
               safeBottom,
               isCartEmpty: isCartEmpty,
+              summary: summary,
               total: summary.total,
             ),
           ],
@@ -380,6 +375,7 @@ class _CartScreenState extends State<CartScreen> {
   Widget _buildCheckoutArea(
     double safeBottom, {
     required bool isCartEmpty,
+    required CartSummary summary,
     required double total,
   }) {
     return Container(
@@ -394,38 +390,49 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ],
       ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: ElevatedButton(
-          onPressed: isCartEmpty
-              ? null
-              : () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const CheckoutScreen(),
-                    ),
-                  );
-                },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.45),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!isCartEmpty) ...[
+            _buildSummaryCard(summary),
+            const SizedBox(height: 12),
+          ],
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: isCartEmpty
+                  ? null
+                  : () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CheckoutScreen(),
+                        ),
+                      );
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                disabledBackgroundColor: AppColors.primary.withValues(
+                  alpha: 0.45,
+                ),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+              child: Text(
+                isCartEmpty
+                    ? 'Add items to continue'
+                    : 'Continue to Pay ${formatCurrency(total)}',
+                style: GoogleFonts.nunito(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ),
-          child: Text(
-            isCartEmpty
-                ? 'Add items to continue'
-                : 'Continue to Pay ${formatCurrency(total)}',
-            style: GoogleFonts.nunito(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
+        ],
       ),
     );
   }
