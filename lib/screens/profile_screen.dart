@@ -132,6 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ? user!.fullName.trim()
         : 'Customer';
     final email = user?.email ?? 'No email available';
+    final avatarUrl = user?.avatarUrl;
 
     return Container(
       width: double.infinity,
@@ -152,11 +153,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2.5),
-              image: const DecorationImage(
-                image: NetworkImage('https://i.pravatar.cc/180?img=58'),
-                fit: BoxFit.cover,
-              ),
             ),
+            clipBehavior: Clip.antiAlias,
+            child: avatarUrl == null
+                ? const Icon(Icons.person, color: Colors.white, size: 32)
+                : Image.network(
+                    avatarUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 32,
+                      );
+                    },
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(

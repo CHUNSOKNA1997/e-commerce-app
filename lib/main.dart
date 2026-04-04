@@ -9,7 +9,9 @@ import 'services/account_service.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'services/catalog_service.dart';
+import 'services/cart_service.dart';
 import 'state/auth_state.dart';
+import 'state/cart_state.dart';
 import 'state/catalog_state.dart';
 import 'state/profile_state.dart';
 
@@ -32,11 +34,15 @@ class MyApp extends StatelessWidget {
         Provider<AccountService>(create: (_) => AccountService(apiClient)),
         Provider<AuthService>(create: (_) => AuthService(apiClient)),
         Provider<CatalogService>(create: (_) => CatalogService(apiClient)),
+        Provider<CartService>(create: (_) => CartService(apiClient)),
         ChangeNotifierProvider<AuthState>(
           create: (context) => AuthState(context.read<AuthService>()),
         ),
         ChangeNotifierProvider<CatalogState>(
           create: (context) => CatalogState(context.read<CatalogService>()),
+        ),
+        ChangeNotifierProvider<CartState>(
+          create: (context) => CartState(context.read<CartService>()),
         ),
         ChangeNotifierProvider<ProfileState>(
           create: (context) => ProfileState(context.read<AccountService>()),

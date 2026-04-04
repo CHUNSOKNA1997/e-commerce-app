@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
 import '../constants/colors.dart';
+import '../models/cart.dart';
+import '../state/cart_state.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -10,77 +14,21 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  List<_CartItem> _cartItems = const [
-    _CartItem(
-      id: '1',
-      name: 'Abracadabra Shirt',
-      category: 'Unisex Wear',
-      price: 4000.00,
-      quantity: 2,
-      imagePath: 'assets/images/purple_hoodie.png',
-    ),
-    _CartItem(
-      id: '2',
-      name: 'Panther Jacket',
-      category: 'Unisex Wear',
-      price: 2500.89,
-      quantity: 2,
-      imagePath: 'assets/images/orange_coat.png',
-    ),
-    _CartItem(
-      id: '3',
-      name: 'Paul Elite Shoe',
-      category: 'Male Wear',
-      price: 2500.89,
-      quantity: 5,
-      imagePath: '',
-    ),
-    _CartItem(
-      id: '4',
-      name: 'Sambizza Fitz',
-      category: 'Male Wear',
-      price: 6340.00,
-      quantity: 4,
-      imagePath: 'assets/images/purple_hoodie.png',
-    ),
-  ];
-
-  bool get _isCartEmpty => _cartItems.isEmpty;
-
-  double get _subTotal =>
-      _cartItems.fold(0, (sum, item) => sum + (item.price * item.quantity));
-
-  double get _vat => _isCartEmpty ? 0 : 350.00;
-
-  double get _deliveryFee => _isCartEmpty ? 0 : 150.00;
-
-  double get _total => _subTotal + _vat + _deliveryFee;
-
-  void _decreaseQty(int index) {
-    final current = _cartItems[index];
-    if (current.quantity <= 1) return;
-
-    setState(() {
-      _cartItems[index] = current.copyWith(quantity: current.quantity - 1);
-    });
-  }
-
-  void _increaseQty(int index) {
-    final current = _cartItems[index];
-    setState(() {
-      _cartItems[index] = current.copyWith(quantity: current.quantity + 1);
-    });
-  }
-
-  void _removeItem(String itemId) {
-    setState(() {
-      _cartItems = _cartItems.where((item) => item.id != itemId).toList();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CartState>().loadCart();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final safeBottom = MediaQuery.of(context).padding.bottom;
+    final cartState = context.watch<CartState>();
+    final cartItems = cartState.items;
+    final summary = cartState.summary;
+    final isCartEmpty = cartItems.isEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
@@ -89,7 +37,15 @@ class _CartScreenState extends State<CartScreen> {
           children: [
             _buildTopBar(),
             Expanded(
-              child: _isCartEmpty
+              child: cartState.isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : cartState.errorMessage != null
+                  ? _buildErrorState(cartState)
+                  : isCartEmpty
                   ? _buildEmptyState()
                   : SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
@@ -98,20 +54,24 @@ class _CartScreenState extends State<CartScreen> {
                           ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _cartItems.length,
+                            itemCount: cartItems.length,
                             separatorBuilder: (context, index) =>
                                 const SizedBox(height: 8),
                             itemBuilder: (context, index) {
-                              return _buildCartItemCard(index);
+                              return _buildCartItemCard(cartItems[index]);
                             },
                           ),
                           const SizedBox(height: 16),
-                          _buildSummaryCard(),
+                          _buildSummaryCard(summary),
                         ],
                       ),
                     ),
             ),
-            _buildCheckoutArea(safeBottom),
+            _buildCheckoutArea(
+              safeBottom,
+              isCartEmpty: isCartEmpty,
+              total: summary.total,
+            ),
           ],
         ),
       ),
@@ -167,9 +127,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildCartItemCard(int index) {
-    final item = _cartItems[index];
-
+  Widget _buildCartItemCard(CartItem item) {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
       decoration: BoxDecoration(
@@ -230,7 +188,7 @@ class _CartScreenState extends State<CartScreen> {
                 children: [
                   _qtyTextButton(
                     text: '-',
-                    onTap: () => _decreaseQty(index),
+                    onTap: () {},
                     textColor: const Color(0xFF6E6E6E),
                   ),
                   const SizedBox(width: 8),
@@ -248,7 +206,7 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
-                    onTap: () => _increaseQty(index),
+                    onTap: () {},
                     child: Container(
                       width: 18,
                       height: 18,
@@ -267,7 +225,7 @@ class _CartScreenState extends State<CartScreen> {
               ),
               const SizedBox(height: 8),
               GestureDetector(
-                onTap: () => _removeItem(item.id),
+                onTap: () {},
                 child: const Icon(
                   Icons.delete_outline,
                   size: 16,
@@ -281,16 +239,16 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildProductThumb(_CartItem item) {
+  Widget _buildProductThumb(CartItem item) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Container(
         width: 50,
         height: 50,
         color: const Color(0xFFF1F1F1),
-        child: item.imagePath.isNotEmpty
+        child: item.imagePath != null && item.imagePath!.isNotEmpty
             ? Image.asset(
-                item.imagePath,
+                item.imagePath!,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return const Icon(Icons.image_outlined, color: AppColors.grey);
@@ -322,7 +280,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(CartSummary summary) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
@@ -333,13 +291,13 @@ class _CartScreenState extends State<CartScreen> {
       ),
       child: Column(
         children: [
-          _summaryRow('Price', _subTotal),
+          _summaryRow('Price', summary.subTotal),
           const SizedBox(height: 8),
-          _summaryRow('VAT', _vat),
+          _summaryRow('VAT', summary.vat),
           const SizedBox(height: 8),
-          _summaryRow('Delivery Fee', _deliveryFee),
+          _summaryRow('Delivery Fee', summary.deliveryFee),
           const Divider(height: 18),
-          _summaryRow('Total', _total, isTotal: true),
+          _summaryRow('Total', summary.total, isTotal: true),
         ],
       ),
     );
@@ -367,7 +325,11 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildCheckoutArea(double safeBottom) {
+  Widget _buildCheckoutArea(
+    double safeBottom, {
+    required bool isCartEmpty,
+    required double total,
+  }) {
     return Container(
       padding: EdgeInsets.fromLTRB(14, 10, 14, safeBottom + 10),
       decoration: BoxDecoration(
@@ -384,7 +346,7 @@ class _CartScreenState extends State<CartScreen> {
         width: double.infinity,
         height: 54,
         child: ElevatedButton(
-          onPressed: _isCartEmpty ? null : () {},
+          onPressed: isCartEmpty ? null : () {},
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.45),
@@ -395,14 +357,60 @@ class _CartScreenState extends State<CartScreen> {
             ),
           ),
           child: Text(
-            _isCartEmpty
+            isCartEmpty
                 ? 'Add items to continue'
-                : 'Continue to Pay \$${_formatMoney(_total)}',
+                : 'Continue to Pay \$${_formatMoney(total)}',
             style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(CartState cartState) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 26),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 40,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Unable to load cart',
+              style: GoogleFonts.nunito(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              cartState.errorMessage ?? 'Something went wrong.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.nunito(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 18),
+            ElevatedButton(
+              onPressed: cartState.loadCart,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
         ),
       ),
     );
@@ -493,41 +501,5 @@ class _CartScreenState extends State<CartScreen> {
       (match) => ',',
     );
     return '$whole.${parts[1]}';
-  }
-}
-
-class _CartItem {
-  final String id;
-  final String name;
-  final String category;
-  final double price;
-  final int quantity;
-  final String imagePath;
-
-  const _CartItem({
-    required this.id,
-    required this.name,
-    required this.category,
-    required this.price,
-    required this.quantity,
-    required this.imagePath,
-  });
-
-  _CartItem copyWith({
-    String? id,
-    String? name,
-    String? category,
-    double? price,
-    int? quantity,
-    String? imagePath,
-  }) {
-    return _CartItem(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      category: category ?? this.category,
-      price: price ?? this.price,
-      quantity: quantity ?? this.quantity,
-      imagePath: imagePath ?? this.imagePath,
-    );
   }
 }

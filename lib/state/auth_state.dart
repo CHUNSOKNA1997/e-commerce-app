@@ -126,6 +126,7 @@ class AuthState extends ChangeNotifier {
           'lastName': _currentUser!.lastName,
           'email': _currentUser!.email,
           'phone': _currentUser!.phone,
+          'avatarPath': _currentUser!.avatarPath,
         }),
       );
     } else {

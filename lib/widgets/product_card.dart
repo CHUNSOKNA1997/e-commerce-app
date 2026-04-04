@@ -18,7 +18,6 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image with Favorite Button
             Stack(
               children: [
                 Container(
@@ -27,9 +26,19 @@ class ProductCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(16),
-                    image: DecorationImage(
-                      image: AssetImage(product.imagePath),
-                      fit: BoxFit.cover,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset(
+                    product.imagePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey.shade100,
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.image_outlined,
+                        size: 36,
+                        color: Colors.grey.shade400,
+                      ),
                     ),
                   ),
                 ),

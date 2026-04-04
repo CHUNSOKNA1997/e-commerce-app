@@ -65,8 +65,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildAppBar(authState),
                     const SizedBox(height: 24),
                     _buildTagline(),
-                    const SizedBox(height: 24),
-                    _buildSearchBar(),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -94,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAppBar(AuthState authState) {
     final user = authState.currentUser;
     final firstName = user?.firstName ?? 'Shopper';
+    final avatarUrl = user?.avatarUrl;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -114,11 +113,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.grey.shade300,
-                  image: const DecorationImage(
-                    image: NetworkImage('https://i.pravatar.cc/150?img=11'),
-                    fit: BoxFit.cover,
-                  ),
                 ),
+                clipBehavior: Clip.antiAlias,
+                child: avatarUrl == null
+                    ? const Icon(Icons.person, color: Colors.white)
+                    : Image.network(
+                        avatarUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.person, color: Colors.white);
+                        },
+                      ),
               ),
               const SizedBox(width: 12),
               Column(
@@ -127,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     'Hello $firstName',
                     style: GoogleFonts.nunito(
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
@@ -186,36 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           TextSpan(text: ' in the easiest way\nall the time.'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 52,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.search, color: Colors.grey.shade500),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              enabled: false,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: 'Search will use the API next',
-                hintStyle: GoogleFonts.nunito(
-                  color: Colors.grey.shade500,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
