@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
 import '../services/auth_service.dart';
+import '../widgets/otp_code_input.dart';
 import 'login_screen.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
@@ -22,26 +23,10 @@ class VerifyEmailScreen extends StatefulWidget {
 
 class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   final _formKey = GlobalKey<FormState>();
-  final List<TextEditingController> _otpControllers = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-  final List<FocusNode> _otpFocusNodes = List.generate(6, (_) => FocusNode());
+  String _otpValue = '';
   bool _isSubmitting = false;
 
-  String get _otpValue => _otpControllers.map((controller) => controller.text).join();
-  bool get _isOtpFilled => _otpControllers.every((controller) => controller.text.isNotEmpty);
-
-  @override
-  void dispose() {
-    for (final controller in _otpControllers) {
-      controller.dispose();
-    }
-    for (final focusNode in _otpFocusNodes) {
-      focusNode.dispose();
-    }
-    super.dispose();
-  }
+  bool get _isOtpFilled => _otpValue.length == 6;
 
   Future<void> _verifyEmail() async {
     if (!_formKey.currentState!.validate() || !_isOtpFilled) {
@@ -121,11 +106,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: List.generate(6, (index) {
-                            return _buildOtpBox(index);
-                          }),
+                        OtpCodeInput(
+                          onChanged: (value) {
+                            setState(() => _otpValue = value);
+                          },
                         ),
                         if (field.hasError) ...[
                           const SizedBox(height: 10),
@@ -216,59 +200,4 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     );
   }
 
-  Widget _buildOtpBox(int index) {
-    return SizedBox(
-      width: 48,
-      height: 72,
-      child: TextFormField(
-        controller: _otpControllers[index],
-        focusNode: _otpFocusNodes[index],
-        keyboardType: TextInputType.number,
-        textInputAction: index == 5 ? TextInputAction.done : TextInputAction.next,
-        textAlign: TextAlign.center,
-        maxLength: 1,
-        style: GoogleFonts.nunito(
-          fontSize: 26,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
-        decoration: InputDecoration(
-          counterText: '',
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.primary, width: 2.2),
-          ),
-        ),
-        onChanged: (value) {
-          final digitsOnly = value.replaceAll(RegExp(r'[^0-9]'), '');
-          if (digitsOnly != value) {
-            _otpControllers[index].text = digitsOnly;
-            _otpControllers[index].selection = TextSelection.fromPosition(
-              TextPosition(offset: _otpControllers[index].text.length),
-            );
-          }
-
-          setState(() {});
-
-          if (digitsOnly.isNotEmpty && index < 5) {
-            _otpFocusNodes[index + 1].requestFocus();
-          } else if (digitsOnly.isEmpty && index > 0) {
-            _otpFocusNodes[index - 1].requestFocus();
-          }
-        },
-        onTapOutside: (_) => FocusScope.of(context).unfocus(),
-      ),
-    );
-  }
 }

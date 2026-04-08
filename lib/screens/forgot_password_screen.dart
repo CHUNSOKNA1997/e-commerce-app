@@ -119,9 +119,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           offset: const Offset(-6, 0),
           child: GestureDetector(
             onTap: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-              );
+              final navigator = Navigator.of(context);
+              if (navigator.canPop()) {
+                navigator.pop();
+              } else {
+                navigator.pushReplacement(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              }
             },
             child: Container(
               width: 42,

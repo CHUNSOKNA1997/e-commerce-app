@@ -202,13 +202,49 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            formatCurrency(order.total),
-            style: GoogleFonts.nunito(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primary,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  formatCurrency(order.total),
+                  style: GoogleFonts.nunito(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              if (order.status.toUpperCase() == 'PENDING')
+                SizedBox(
+                  height: 36,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Pending order payment flow is coming next.'),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                    child: Text(
+                      'PAY',
+                      style: GoogleFonts.nunito(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
           if (order.createdAt != null) ...[
             const SizedBox(height: 6),

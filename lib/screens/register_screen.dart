@@ -143,11 +143,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
           offset: const Offset(-6, 0),
           child: GestureDetector(
             onTap: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => const OnboardingScreen(),
-                ),
-              );
+              final navigator = Navigator.of(context);
+              if (navigator.canPop()) {
+                navigator.pop();
+              } else {
+                navigator.pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => const OnboardingScreen(),
+                  ),
+                );
+              }
             },
             child: Container(
               width: 42,
