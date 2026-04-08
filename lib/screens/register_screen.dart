@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
 import '../services/auth_service.dart';
-import 'login_screen.dart';
+import 'onboarding_screen.dart';
+import 'verify_email_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -49,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      await context.read<AuthService>().register(
+      final result = await context.read<AuthService>().register(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
@@ -60,11 +61,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful. Please log in.')),
+        SnackBar(content: Text(result.message)),
       );
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(
+            email: result.user.email,
+            expiresInMinutes: result.expiresInMinutes,
+          ),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
@@ -136,7 +142,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Transform.translate(
           offset: const Offset(-6, 0),
           child: GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => const OnboardingScreen(),
+                ),
+              );
+            },
             child: Container(
               width: 42,
               height: 42,
@@ -293,6 +305,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required IconData prefix,
     Widget? suffix,
   }) {
+    const fieldRadius = Radius.circular(999);
+
     return InputDecoration(
       hintText: hint,
       hintStyle: GoogleFonts.nunito(
@@ -306,19 +320,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
       fillColor: const Color(0xFFF7F7F7),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(fieldRadius),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(fieldRadius),
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(fieldRadius),
         borderSide: const BorderSide(color: Colors.redAccent),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: const BorderRadius.all(fieldRadius),
         borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
       ),
     );

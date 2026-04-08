@@ -3,62 +3,68 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
-import '../state/auth_state.dart';
-import 'forgot_password_screen.dart';
-import 'main_shell.dart';
-import 'onboarding_screen.dart';
+import '../services/auth_service.dart';
+import 'forgot_password_verify_screen.dart';
+import 'login_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ForgotPasswordScreen extends StatefulWidget {
+  final String? email;
+
+  const ForgotPasswordScreen({super.key, this.email});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _isLoading = false;
+  bool _isSubmitting = false;
 
-  bool get _isFormFilled =>
-      _emailController.text.trim().isNotEmpty &&
-      _passwordController.text.isNotEmpty;
+  bool get _isFormFilled => _emailController.text.trim().isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.email != null && widget.email!.trim().isNotEmpty) {
+      _emailController.text = widget.email!.trim();
+    }
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() => _isSubmitting = true);
 
     try {
-      await context.read<AuthState>().login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      final email = _emailController.text.trim();
+      await context.read<AuthService>().forgotPassword(email: email);
 
       if (!mounted) return;
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const MainShell()),
-        (route) => false,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('OTP sent to your email.')),
+      );
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => ForgotPasswordVerifyScreen(email: email),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isSubmitting = false);
       }
     }
   }
@@ -69,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
           child: Form(
             key: _formKey,
             child: Column(
@@ -78,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildTopBar(),
                 const SizedBox(height: 26),
                 Text(
-                  'Welcome Back',
+                  'Forget Password',
                   style: GoogleFonts.nunito(
                     fontSize: 34,
                     fontWeight: FontWeight.w800,
@@ -87,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Log in to continue shopping your favorite styles.',
+                  'Enter your email address so we can help you reset your password.',
                   style: GoogleFonts.nunito(
                     fontSize: 14,
                     height: 1.55,
@@ -95,11 +101,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 26),
-                _buildFormCard(),
-                const SizedBox(height: 10),
-                _buildForgotPasswordAction(),
+                _buildEmailField(),
                 const SizedBox(height: 26),
-                _buildLoginButton(),
+                _buildSubmitButton(),
               ],
             ),
           ),
@@ -116,9 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: GestureDetector(
             onTap: () {
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => const OnboardingScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
               );
             },
             child: Container(
@@ -137,16 +139,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildFormCard() {
-    return Column(
-      children: [
-        _buildEmailField(),
-        const SizedBox(height: 14),
-        _buildPasswordField(),
       ],
     );
   }
@@ -178,72 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildPasswordField() {
-    return TextFormField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      onChanged: (_) => setState(() {}),
-      style: GoogleFonts.nunito(
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your password';
-        }
-        if (value.length < 6) {
-          return 'Password must be at least 6 characters';
-        }
-        return null;
-      },
-      decoration: _inputDecoration(
-        hint: 'Password',
-        prefix: Icons.lock_outline,
-        suffix: IconButton(
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-          icon: Icon(
-            _obscurePassword
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildForgotPasswordAction() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: TextButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-          );
-        },
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          minimumSize: Size.zero,
-        ),
-        child: Text(
-          'Forget Password?',
-          style: GoogleFonts.nunito(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: AppColors.primary,
-          ),
-        ),
-      ),
-    );
-  }
-
   InputDecoration _inputDecoration({
     required String hint,
     required IconData prefix,
-    Widget? suffix,
   }) {
     const fieldRadius = Radius.circular(999);
 
@@ -255,7 +184,6 @@ class _LoginScreenState extends State<LoginScreen> {
         color: AppColors.textSecondary,
       ),
       prefixIcon: Icon(prefix, color: AppColors.textSecondary),
-      suffixIcon: suffix,
       filled: true,
       fillColor: const Color(0xFFF7F7F7),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -278,12 +206,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildLoginButton() {
+  Widget _buildSubmitButton() {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: _isLoading || !_isFormFilled ? null : _login,
+        onPressed: _isSubmitting || !_isFormFilled ? null : _submit,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.55),
@@ -293,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(28),
           ),
         ),
-        child: _isLoading
+        child: _isSubmitting
             ? const SizedBox(
                 width: 22,
                 height: 22,
@@ -303,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               )
             : Text(
-                'Log In',
+                'Continue',
                 style: GoogleFonts.nunito(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,

@@ -7,6 +7,7 @@ class AuthUser {
   final String email;
   final String? phone;
   final String? avatarPath;
+  final bool isEmailVerified;
 
   const AuthUser({
     required this.id,
@@ -15,6 +16,7 @@ class AuthUser {
     required this.email,
     this.phone,
     this.avatarPath,
+    this.isEmailVerified = true,
   });
 
   String get fullName => '$firstName $lastName';
@@ -55,6 +57,7 @@ class AuthUser {
       email: json['email'] as String,
       phone: json['phone'] as String?,
       avatarPath: json['avatarPath'] as String?,
+      isEmailVerified: json['isEmailVerified'] as bool? ?? true,
     );
   }
 }
