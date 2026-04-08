@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import '../constants/colors.dart';
 import '../models/order.dart';
 import '../services/account_service.dart';
+import '../services/cart_service.dart';
 import '../utils/currency_formatter.dart';
+import '../widgets/payment_checkout_sheet.dart';
 import '../widgets/skeleton_box.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
@@ -16,12 +18,71 @@ class OrderHistoryScreen extends StatefulWidget {
 }
 
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
-  late final Future<List<Order>> _ordersFuture;
+  late Future<List<Order>> _ordersFuture;
+  String? _payingOrderId;
 
   @override
   void initState() {
     super.initState();
-    _ordersFuture = context.read<AccountService>().getOrders();
+    _ordersFuture = _loadOrders();
+  }
+
+  Future<List<Order>> _loadOrders() {
+    return context.read<AccountService>().getOrders();
+  }
+
+  Future<void> _retryPayment(Order order) async {
+    setState(() => _payingOrderId = order.id);
+
+    try {
+      final cartService = context.read<CartService>();
+      final checkout = await cartService.createCheckout(
+        amount: order.total,
+        orderId: order.id,
+      );
+
+      if (!mounted) return;
+
+      final paymentSucceeded =
+              await showModalBottomSheet<bool>(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => PaymentCheckoutSheet(checkout: checkout),
+              ) ??
+              false;
+
+      if (!mounted) return;
+
+      if (paymentSucceeded) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Payment completed successfully.',
+              style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+            ),
+          ),
+        );
+      }
+
+      setState(() {
+        _ordersFuture = _loadOrders();
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString(),
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _payingOrderId = null);
+      }
+    }
   }
 
   @override
@@ -164,6 +225,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   }
 
   Widget _buildOrderCard(Order order) {
+    final isPaying = _payingOrderId == order.id;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -219,29 +282,34 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 SizedBox(
                   height: 36,
                   child: ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Pending order payment flow is coming next.'),
-                        ),
-                      );
-                    },
+                    onPressed: isPaying ? null : () => _retryPayment(order),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor:
+                          AppColors.primary.withValues(alpha: 0.45),
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 18),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
-                    child: Text(
-                      'PAY',
-                      style: GoogleFonts.nunito(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                    child: isPaying
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'PAY',
+                            style: GoogleFonts.nunito(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                   ),
                 ),
             ],
