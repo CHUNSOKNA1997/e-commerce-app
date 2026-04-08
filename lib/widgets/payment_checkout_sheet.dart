@@ -9,6 +9,8 @@ import '../constants/colors.dart';
 import '../models/payment_checkout.dart';
 import '../services/cart_service.dart';
 
+enum PaymentFlowStatus { success, failed, cancelled, expired }
+
 class PaymentCheckoutSheet extends StatefulWidget {
   final PaymentCheckout checkout;
 
@@ -200,10 +202,33 @@ class _PaymentCheckoutSheetState extends State<PaymentCheckoutSheet> {
         return;
       }
 
-      if (payment.status.toUpperCase() == 'SUCCESS') {
+      final normalized = payment.status.toUpperCase();
+
+      if (normalized == 'SUCCESS') {
         _hasCompleted = true;
         _statusTimer?.cancel();
-        Navigator.of(context).pop(true);
+        Navigator.of(context).pop(PaymentFlowStatus.success);
+        return;
+      }
+
+      if (normalized == 'FAILED') {
+        _hasCompleted = true;
+        _statusTimer?.cancel();
+        Navigator.of(context).pop(PaymentFlowStatus.failed);
+        return;
+      }
+
+      if (normalized == 'CANCELLED') {
+        _hasCompleted = true;
+        _statusTimer?.cancel();
+        Navigator.of(context).pop(PaymentFlowStatus.cancelled);
+        return;
+      }
+
+      if (normalized == 'EXPIRED') {
+        _hasCompleted = true;
+        _statusTimer?.cancel();
+        Navigator.of(context).pop(PaymentFlowStatus.expired);
       }
     } catch (_) {
       // Ignore transient polling failures and continue polling.

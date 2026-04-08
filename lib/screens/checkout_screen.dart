@@ -47,16 +47,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
 
       if (!mounted) return;
-      final paymentSucceeded =
-          await showModalBottomSheet<bool>(
+      final paymentResult =
+          await showModalBottomSheet<PaymentFlowStatus>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (_) => PaymentCheckoutSheet(checkout: checkout),
-      ) ??
-          false;
+      );
       if (!mounted) return;
-      if (paymentSucceeded) {
+      if (paymentResult == PaymentFlowStatus.success) {
         await cartState.loadCart();
         if (!mounted) return;
         navigator.pop();
@@ -65,6 +64,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           SnackBar(
             content: Text(
               'Payment completed successfully.',
+              style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+            ),
+          ),
+        );
+      } else if (paymentResult != null) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              _paymentStatusMessage(paymentResult),
               style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
             ),
           ),
@@ -85,6 +93,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  String _paymentStatusMessage(PaymentFlowStatus status) {
+    return switch (status) {
+      PaymentFlowStatus.success => 'Payment completed successfully.',
+      PaymentFlowStatus.failed => 'Payment failed. Please try again.',
+      PaymentFlowStatus.cancelled => 'Payment was cancelled.',
+      PaymentFlowStatus.expired => 'Payment session expired. Please try again.',
+    };
   }
 
   @override

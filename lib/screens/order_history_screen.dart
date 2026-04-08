@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
 import '../models/order.dart';
+import '../screens/order_detail_screen.dart';
 import '../services/account_service.dart';
 import '../services/cart_service.dart';
 import '../utils/currency_formatter.dart';
@@ -43,22 +44,21 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
       if (!mounted) return;
 
-      final paymentSucceeded =
-              await showModalBottomSheet<bool>(
+      final paymentResult =
+              await showModalBottomSheet<PaymentFlowStatus>(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
                 builder: (_) => PaymentCheckoutSheet(checkout: checkout),
-              ) ??
-              false;
+              );
 
       if (!mounted) return;
 
-      if (paymentSucceeded) {
+      if (paymentResult != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Payment completed successfully.',
+              _paymentStatusMessage(paymentResult),
               style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
             ),
           ),
@@ -83,6 +83,15 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         setState(() => _payingOrderId = null);
       }
     }
+  }
+
+  String _paymentStatusMessage(PaymentFlowStatus status) {
+    return switch (status) {
+      PaymentFlowStatus.success => 'Payment completed successfully.',
+      PaymentFlowStatus.failed => 'Payment failed. Please try again.',
+      PaymentFlowStatus.cancelled => 'Payment was cancelled.',
+      PaymentFlowStatus.expired => 'Payment session expired. Please try again.',
+    };
   }
 
   @override
@@ -227,105 +236,118 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   Widget _buildOrderCard(Order order) {
     final isPaying = _payingOrderId == order.id;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEFEFEF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '#${order.id}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              _StatusPill(status: order.status),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            '${order.itemCount} item${order.itemCount == 1 ? '' : 's'}',
-            style: GoogleFonts.nunito(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => OrderDetailScreen(order: order),
             ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFEFEFEF)),
           ),
-          const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  formatCurrency(order.total),
-                  style: GoogleFonts.nunito(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              if (order.status.toUpperCase() == 'PENDING')
-                SizedBox(
-                  height: 36,
-                  child: ElevatedButton(
-                    onPressed: isPaying ? null : () => _retryPayment(order),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor:
-                          AppColors.primary.withValues(alpha: 0.45),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '#${order.id}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                    child: isPaying
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            'PAY',
-                            style: GoogleFonts.nunito(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                            ),
+                  ),
+                  const SizedBox(width: 12),
+                  _StatusPill(status: order.status),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                '${order.totalQuantity} item${order.totalQuantity == 1 ? '' : 's'}',
+                style: GoogleFonts.nunito(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(
+                      formatCurrency(order.total),
+                      style: GoogleFonts.nunito(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  if (order.status.toUpperCase() == 'PENDING')
+                    SizedBox(
+                      height: 36,
+                      child: ElevatedButton(
+                        onPressed: isPaying ? null : () => _retryPayment(order),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor:
+                              AppColors.primary.withValues(alpha: 0.45),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(999),
                           ),
+                        ),
+                        child: isPaying
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                'PAY',
+                                style: GoogleFonts.nunito(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                      ),
+                    ),
+                ],
+              ),
+              if (order.createdAt != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  _formatDate(order.createdAt!),
+                  style: GoogleFonts.nunito(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
                   ),
                 ),
+              ],
             ],
           ),
-          if (order.createdAt != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              _formatDate(order.createdAt!),
-              style: GoogleFonts.nunito(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
