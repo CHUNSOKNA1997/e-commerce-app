@@ -96,15 +96,9 @@ class _AppBootstrapState extends State<AppBootstrap> {
 
         if (snapshot.connectionState != ConnectionState.done ||
             authState.isRestoring) {
-          return Scaffold(
+          return const Scaffold(
             backgroundColor: Colors.white,
-            body: Center(
-              child: Image.asset(
-                'assets/main-logo/app-splash-logo.png',
-                width: 180,
-                height: 180,
-              ),
-            ),
+            body: SizedBox.expand(),
           );
         }
 
