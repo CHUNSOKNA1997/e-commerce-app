@@ -5,6 +5,9 @@ import '../models/product.dart';
 import 'product_image.dart';
 
 class ProductCard extends StatelessWidget {
+  static const double cardWidth = 148;
+  static const double imageSize = 148;
+
   final Product product;
   final VoidCallback onTap;
   final VoidCallback? onFavoriteTap;
@@ -21,7 +24,7 @@ class ProductCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 160,
+        width: cardWidth,
         margin: const EdgeInsets.only(right: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,8 +32,8 @@ class ProductCard extends StatelessWidget {
             Stack(
               children: [
                 Container(
-                  height: 160,
-                  width: 160,
+                  height: imageSize,
+                  width: imageSize,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(16),

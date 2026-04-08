@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 import 'forgot_password_verify_screen.dart';
 import 'login_screen.dart';
 
@@ -48,9 +49,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('OTP sent to your email.')),
-      );
+      showAppSnackBar(context, 'OTP sent to your email.');
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -59,9 +58,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      showAppSnackBar(context, error.toString(), isError: true);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);

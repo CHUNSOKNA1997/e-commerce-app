@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 import 'onboarding_screen.dart';
 import 'verify_email_screen.dart';
 
@@ -60,9 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.message)),
-      );
+      showAppSnackBar(context, result.message);
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -74,10 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      showAppSnackBar(context, error.toString(), isError: true);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);

@@ -12,6 +12,7 @@ import '../models/profile_dashboard.dart';
 import '../state/auth_state.dart';
 import '../state/cart_state.dart';
 import '../state/profile_state.dart';
+import '../utils/snackbar_helper.dart';
 import 'login_screen.dart';
 import 'order_history_screen.dart';
 
@@ -572,7 +573,6 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       return;
     }
 
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final profileState = context.read<ProfileState>();
     final authState = context.read<AuthState>();
@@ -597,12 +597,10 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
       await profileState.loadDashboard();
       if (!mounted) return;
       navigator.pop();
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(content: Text('Profile updated')),
-      );
+      showAppSnackBar(context, 'Profile updated');
     } catch (error) {
       if (!mounted) return;
-      scaffoldMessenger.showSnackBar(SnackBar(content: Text(error.toString())));
+      showAppSnackBar(context, error.toString(), isError: true);
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);

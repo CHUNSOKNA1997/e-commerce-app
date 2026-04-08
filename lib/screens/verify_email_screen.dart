@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
 import '../services/auth_service.dart';
+import '../utils/snackbar_helper.dart';
 import '../widgets/otp_code_input.dart';
 import 'login_screen.dart';
 
@@ -43,9 +44,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email verified. Please log in.')),
-      );
+      showAppSnackBar(context, 'Email verified. Please log in.');
 
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -53,9 +52,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      showAppSnackBar(context, error.toString(), isError: true);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);

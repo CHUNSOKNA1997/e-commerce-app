@@ -145,13 +145,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.28),
-                    blurRadius: 28,
-                    offset: const Offset(0, 14),
-                  ),
-                ],
               ),
               clipBehavior: Clip.antiAlias,
               child: Stack(
@@ -274,10 +267,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           const SizedBox(height: 28),
-          RichText(
-            text: TextSpan(
+          Text.rich(
+            TextSpan(
               style: GoogleFonts.nunito(
-                fontSize: 31,
+                fontSize: 28,
                 fontWeight: FontWeight.w800,
                 height: 1.15,
                 color: AppColors.textPrimary,
@@ -288,7 +281,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   text: 'Fashion',
                   style: TextStyle(color: AppColors.primary),
                 ),
-                TextSpan(text: ' Around\nYour Taste'),
+                TextSpan(text: ' Around Your Taste'),
               ],
             ),
           ),

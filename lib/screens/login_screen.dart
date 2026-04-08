@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
 import '../state/auth_state.dart';
+import '../utils/snackbar_helper.dart';
 import 'forgot_password_screen.dart';
 import 'main_shell.dart';
 import 'onboarding_screen.dart';
@@ -52,10 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.toString())));
+      showAppSnackBar(context, error.toString(), isError: true);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

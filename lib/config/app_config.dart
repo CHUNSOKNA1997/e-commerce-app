@@ -1,5 +1,6 @@
 class AppConfig {
-  static const String apiBaseUrl = 'http://10.0.2.2:5000/api/v1';
+  static const String apiBaseUrl =
+      'https://flutter-ecommerce-api.onrender.com/api/v1';
 
   static String get apiOrigin {
     final uri = Uri.parse(apiBaseUrl);

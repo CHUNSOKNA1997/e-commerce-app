@@ -243,10 +243,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTagline() {
-    return RichText(
-      text: TextSpan(
+    return Text.rich(
+      TextSpan(
         style: GoogleFonts.nunito(
-          fontSize: 22,
+          fontSize: 20,
           fontWeight: FontWeight.w500,
           color: AppColors.textPrimary,
           height: 1.2,
@@ -260,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          TextSpan(text: ' in the easiest way\nall the time.'),
+          TextSpan(text: ' in the easiest way all the time.'),
         ],
       ),
     );
@@ -401,15 +401,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProductCardSkeleton() {
-    return SizedBox(
-      width: 214,
+    return const SizedBox(
+      width: ProductCard.cardWidth,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           SkeletonBox(
-            width: 214,
-            height: 150,
-            borderRadius: BorderRadius.all(Radius.circular(20)),
+            width: ProductCard.cardWidth,
+            height: ProductCard.imageSize,
+            borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
           SizedBox(height: 12),
           SkeletonBox(width: 132, height: 18),

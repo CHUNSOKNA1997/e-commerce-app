@@ -24,6 +24,8 @@ class PaymentCheckoutSheet extends StatefulWidget {
 }
 
 class _PaymentCheckoutSheetState extends State<PaymentCheckoutSheet> {
+  static const Color _checkoutBackground = Color(0xFFF7F7F7);
+
   late final WebViewController _controller;
   Timer? _statusTimer;
   bool _hasCompleted = false;
@@ -77,65 +79,78 @@ class _PaymentCheckoutSheetState extends State<PaymentCheckoutSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
+    const topRadius = Radius.circular(28);
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.88,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 44,
-            height: 5,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD8D8D8),
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 2, 12, 0),
-              child: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 32,
-                  height: 32,
-                ),
-                icon: const Icon(Icons.close),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: topRadius),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.87,
+        decoration: const BoxDecoration(
+          color: _checkoutBackground,
+          borderRadius: BorderRadius.vertical(top: topRadius),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 6),
+            Container(
+              width: 44,
+              height: 5,
+              decoration: BoxDecoration(
+                color: const Color(0xFFD8D8D8),
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
-          ),
-          Expanded(
-            child: widget.checkout.resolvedCheckoutUrl.isEmpty
-                ? Center(
-                    child: Text(
-                      'Checkout URL is unavailable.',
-                      style: GoogleFonts.nunito(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
-                      ),
+            Container(
+              color: _checkoutBackground,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 30,
+                      height: 30,
                     ),
-                  )
-                : Stack(
-                    children: [
-                      WebViewWidget(controller: _controller),
-                      if (_isLoading)
-                        const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                    ],
+                    icon: const Icon(Icons.close),
                   ),
-          ),
-          SizedBox(height: bottomInset),
-        ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: widget.checkout.resolvedCheckoutUrl.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Checkout URL is unavailable.',
+                        style: GoogleFonts.nunito(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    )
+                  : Stack(
+                      children: [
+                        ColoredBox(
+                          color: _checkoutBackground,
+                          child: WebViewWidget(controller: _controller),
+                        ),
+                        if (_isLoading)
+                          const ColoredBox(
+                            color: _checkoutBackground,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
+            SizedBox(height: bottomInset),
+          ],
+        ),
       ),
     );
   }
