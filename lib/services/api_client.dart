@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -16,9 +17,13 @@ class ApiException implements Exception {
 
 class ApiClient {
   final String baseUrl;
+  final Duration timeout;
   String? _accessToken;
 
-  ApiClient({this.baseUrl = AppConfig.apiBaseUrl});
+  ApiClient({
+    this.baseUrl = AppConfig.apiBaseUrl,
+    this.timeout = const Duration(seconds: 20),
+  });
 
   void setAccessToken(String? accessToken) {
     _accessToken = accessToken;
@@ -31,7 +36,7 @@ class ApiClient {
     final response = await http.get(
       Uri.parse('$baseUrl$path'),
       headers: _buildHeaders(authenticated: authenticated),
-    );
+    ).timeout(timeout, onTimeout: _throwTimeout);
 
     return _decodeJson(response);
   }
@@ -45,7 +50,7 @@ class ApiClient {
       Uri.parse('$baseUrl$path'),
       headers: _buildHeaders(authenticated: authenticated),
       body: jsonEncode(body),
-    );
+    ).timeout(timeout, onTimeout: _throwTimeout);
 
     return _decodeJson(response);
   }
@@ -60,7 +65,7 @@ class ApiClient {
         authenticated: authenticated,
         includeJsonContentType: false,
       ),
-    );
+    ).timeout(timeout, onTimeout: _throwTimeout);
 
     return _decodeJson(response);
   }
@@ -74,7 +79,7 @@ class ApiClient {
       Uri.parse('$baseUrl$path'),
       headers: _buildHeaders(authenticated: authenticated),
       body: jsonEncode(body),
-    );
+    ).timeout(timeout, onTimeout: _throwTimeout);
 
     return _decodeJson(response);
   }
@@ -88,7 +93,7 @@ class ApiClient {
       Uri.parse('$baseUrl$path'),
       headers: _buildHeaders(authenticated: authenticated),
       body: jsonEncode(body),
-    );
+    ).timeout(timeout, onTimeout: _throwTimeout);
 
     return _decodeJson(response);
   }
@@ -103,7 +108,7 @@ class ApiClient {
         authenticated: authenticated,
         includeJsonContentType: false,
       ),
-    );
+    ).timeout(timeout, onTimeout: _throwTimeout);
 
     return _decodeJson(response);
   }
@@ -125,9 +130,19 @@ class ApiClient {
       );
     }
 
-    final streamed = await request.send();
+    final streamed = await request.send().timeout(timeout, onTimeout: () {
+      throw const ApiException(
+        'Request timed out. Please check your connection and try again.',
+      );
+    });
     final response = await http.Response.fromStream(streamed);
     return _decodeJson(response);
+  }
+
+  Future<http.Response> _throwTimeout() {
+    throw const ApiException(
+      'Request timed out. Please check your connection and try again.',
+    );
   }
 
   Map<String, String> _buildHeaders({
