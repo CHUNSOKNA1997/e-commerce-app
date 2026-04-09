@@ -1,0 +1,13 @@
+android/** linguist-vendored
+ios/** linguist-vendored
+linux/** linguist-vendored
+macos/** linguist-vendored
+windows/** linguist-vendored
+web/** linguist-vendored
+
+android/app/src/main/kotlin/** linguist-generated
+android/app/src/main/java/** linguist-generated
+ios/Runner/** linguist-generated
+linux/runner/** linguist-generated
+macos/Runner/** linguist-generated
+windows/runner/** linguist-generated
